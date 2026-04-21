@@ -228,7 +228,13 @@ export default function ForceGraph({ onSelectPrimary, expandedCategory }: Props)
       n.vy = 0;
     }
 
-    simRef.current?.alpha(0.9);
+    // Pre-run the sim synchronously so the first painted frame is already
+    // in the settled/expanded state — no "slowly opening" on load or deploy.
+    const sim = simRef.current;
+    if (sim) {
+      sim.alpha(1);
+      for (let i = 0; i < 220; i++) sim.tick();
+    }
   }, [size]);
 
   /* ------------------- bloom (category expanded) ---------------- */

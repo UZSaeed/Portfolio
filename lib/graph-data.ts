@@ -202,9 +202,9 @@ export const PRIMARY_ANGLES: Record<Exclude<Category, "center">, number> = {
 };
 
 /** Fraction of min(viewport width, height) used for the primary ring. */
-const PRIMARY_RADIUS_FRAC = 0.38;
+const PRIMARY_RADIUS_FRAC = 0.46;
 /** Fraction of min(viewport width, height) used for the sub-node ring. */
-const SUB_RADIUS_FRAC = 0.45;
+const SUB_RADIUS_FRAC = 0.62;
 /** Half-width of the fan that holds a primary's three sub-nodes (radians). */
 const SUB_FAN_HALF = 1.1;
 
