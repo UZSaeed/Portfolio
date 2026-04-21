@@ -202,11 +202,11 @@ export const PRIMARY_ANGLES: Record<Exclude<Category, "center">, number> = {
 };
 
 /** Fraction of min(viewport width, height) used for the primary ring. */
-const PRIMARY_RADIUS_FRAC = 0.46;
+const PRIMARY_RADIUS_FRAC = 0.38;
 /** Fraction of min(viewport width, height) used for the sub-node ring. */
-const SUB_RADIUS_FRAC = 0.78;
+const SUB_RADIUS_FRAC = 0.45;
 /** Half-width of the fan that holds a primary's three sub-nodes (radians). */
-const SUB_FAN_HALF = 0.70;
+const SUB_FAN_HALF = 1.1;
 
 /** Stable per-id hash, used to seed small wobble. */
 function hash(id: string, seed: number): number {
@@ -217,14 +217,14 @@ function hash(id: string, seed: number): number {
   return (h % 10000) / 10000;
 }
 
-/** Small angular wobble per id so the layout isn't CAD-perfect. */
+/** Large per-node angle offset — breaks the clean quadrant layout. */
 function angleWobble(id: string): number {
-  return (hash(id, 5381) - 0.5) * 0.18;
+  return (hash(id, 5381) - 0.5) * 1.4;
 }
 
-/** Slight radial breathing so branches aren't all exactly the same length. */
+/** Wide radial variation so nodes land at very different distances. */
 function radialScale(id: string): number {
-  return 0.95 + hash(id, 7919) * 0.08;
+  return 0.55 + hash(id, 7919) * 0.9;
 }
 
 export interface Target {
@@ -246,9 +246,9 @@ export function computeTargets(
   const out = new Map<string, Target>();
   out.set(CENTER_ID, { x: 0, y: 0 });
 
-  const minDim = Math.min(width, height);
-  const rPrimary = minDim * PRIMARY_RADIUS_FRAC;
-  const rSub = minDim * SUB_RADIUS_FRAC;
+  const refDim = Math.min(width, height);
+  const rPrimary = refDim * PRIMARY_RADIUS_FRAC;
+  const rSub = refDim * SUB_RADIUS_FRAC;
 
   for (const cat of Object.keys(PRIMARY_ANGLES) as Exclude<
     Category,
@@ -311,16 +311,29 @@ export function buildGraph(): { nodes: GraphNode[]; links: GraphLink[] } {
     }
   }
 
-  // Cross-links — visual mesh, no physics.
+  // Cross-links — all primary pairs for a fully connected, messy mesh.
   const crossPairs: [string, string, boolean?][] = [
     ["code", "research"],
     ["research", "outreach"],
     ["outreach", "creativity"],
     ["creativity", "code"],
     ["code", "outreach", true],
+    ["research", "creativity", true],
   ];
   for (const [a, b, weak] of crossPairs) {
     links.push({ source: a, target: b, strength: 0, distance: 300, weak });
+  }
+
+  // A handful of sub→primary cross-category links for extra web density.
+  const subCross: [string, string][] = [
+    ["soma", "research"],
+    ["emg", "code"],
+    ["neuro-demos", "research"],
+    ["spikeprep", "outreach"],
+    ["ricing", "code"],
+  ];
+  for (const [a, b] of subCross) {
+    links.push({ source: a, target: b, strength: 0, distance: 250, weak: true });
   }
 
   return { nodes, links };

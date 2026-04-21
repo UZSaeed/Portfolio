@@ -66,7 +66,10 @@ export default function ForceGraph({ onSelectPrimary, expandedCategory }: Props)
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  const [size, setSize] = useState({ w: 0, h: 0 });
+  const [size, setSize] = useState(() => ({
+    w: typeof window !== "undefined" ? window.innerWidth : 0,
+    h: typeof window !== "undefined" ? window.innerHeight : 0,
+  }));
   const [hoverId, setHoverId] = useState<string | null>(null);
   const [hasPanned, setHasPanned] = useState(false);
 
@@ -167,13 +170,13 @@ export default function ForceGraph({ onSelectPrimary, expandedCategory }: Props)
       .force(
         "anchor-x",
         forceX<SimNode>((n) => getTarget(n).x).strength((n) =>
-          n.id === CENTER_ID ? 0 : n.parent ? 0.55 : 0.75,
+          n.id === CENTER_ID ? 0 : n.parent ? 0.28 : 0.40,
         ),
       )
       .force(
         "anchor-y",
         forceY<SimNode>((n) => getTarget(n).y).strength((n) =>
-          n.id === CENTER_ID ? 0 : n.parent ? 0.55 : 0.75,
+          n.id === CENTER_ID ? 0 : n.parent ? 0.28 : 0.40,
         ),
       )
       .alphaDecay(0.01)
