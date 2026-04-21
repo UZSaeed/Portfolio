@@ -585,12 +585,7 @@ function drawNode(
     roundRect(ctx, x - bgW / 2, labelY - 3, bgW, bgH, 4);
     ctx.fill();
 
-    ctx.fillStyle =
-      n.category === "center"
-        ? "#c0caf5"
-        : isHover || isExpanded
-          ? color
-          : "#c0caf5";
+    ctx.fillStyle = isHover || isExpanded ? color : "#c0caf5";
     ctx.fillText(text, x, labelY);
   }
 
