@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import NodePanel from "@/components/NodePanel";
 import {
   BuiltWith,
+  ContactLinks,
   StarshipPrompt,
   TopLeftHint,
 } from "@/components/TerminalChrome";
@@ -46,6 +47,7 @@ export default function Page() {
       <NodePanel node={selected} onClose={handleClose} />
 
       <TopLeftHint />
+      <ContactLinks />
       <StarshipPrompt />
       <BuiltWith />
 

@@ -49,6 +49,48 @@ const STACK: { label: string; color: string }[] = [
   { label: "Tokyo Night", color: "text-tn-orange" },
 ];
 
+export function ContactLinks() {
+  const links = [
+    {
+      href: "mailto:uzair1saeed@gmail.com",
+      label: "email",
+      color: "text-tn-green",
+    },
+    {
+      href: "https://github.com/UZSaeed",
+      label: "github",
+      color: "text-tn-blue",
+    },
+    {
+      href: "https://scholar.google.com/citations?hl=en&user=Lsj5fHIAAAAJ",
+      label: "google scholar",
+      color: "text-tn-magenta",
+    },
+  ];
+
+  return (
+    <div className="pointer-events-none fixed top-4 right-4 z-30 text-[11.5px] font-mono">
+      <div className="terminal-window pointer-events-auto rounded-lg px-3 py-2 flex items-center gap-3">
+        {links.map((l, i) => (
+          <span key={l.href} className="flex items-center gap-3">
+            <a
+              href={l.href}
+              target={l.href.startsWith("mailto") ? undefined : "_blank"}
+              rel="noopener noreferrer"
+              className={`${l.color} hover:opacity-80 transition-opacity`}
+            >
+              {l.label}
+            </a>
+            {i < links.length - 1 && (
+              <span className="text-tn-comment">·</span>
+            )}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function BuiltWith() {
   return (
     <div className="pointer-events-none fixed bottom-5 right-5 z-30 text-[11.5px] font-mono max-w-[min(560px,calc(100vw-2.5rem))]">

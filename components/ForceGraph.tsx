@@ -66,10 +66,7 @@ export default function ForceGraph({ onSelectPrimary, expandedCategory }: Props)
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  const [size, setSize] = useState(() => ({
-    w: typeof window !== "undefined" ? window.innerWidth : 0,
-    h: typeof window !== "undefined" ? window.innerHeight : 0,
-  }));
+  const [size, setSize] = useState({ w: 0, h: 0 });
   const [hoverId, setHoverId] = useState<string | null>(null);
   const [hasPanned, setHasPanned] = useState(false);
 
@@ -110,14 +107,21 @@ export default function ForceGraph({ onSelectPrimary, expandedCategory }: Props)
 
   /* --------------------------- sizing --------------------------- */
   useEffect(() => {
-    if (!wrapRef.current) return;
+    const el = wrapRef.current;
+    if (!el) return;
+
+    // Measure immediately so we get the real rendered size on first paint —
+    // window.innerWidth can diverge from the actual element size in prod.
+    const { width, height } = el.getBoundingClientRect();
+    if (width && height) setSize({ w: Math.floor(width), h: Math.floor(height) });
+
     const ro = new ResizeObserver((entries) => {
       for (const e of entries) {
         const { width, height } = e.contentRect;
         setSize({ w: Math.floor(width), h: Math.floor(height) });
       }
     });
-    ro.observe(wrapRef.current);
+    ro.observe(el);
     return () => ro.disconnect();
   }, []);
 
@@ -233,7 +237,7 @@ export default function ForceGraph({ onSelectPrimary, expandedCategory }: Props)
     const sim = simRef.current;
     if (sim) {
       sim.alpha(1);
-      for (let i = 0; i < 220; i++) sim.tick();
+      for (let i = 0; i < 400; i++) sim.tick();
     }
   }, [size]);
 

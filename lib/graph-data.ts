@@ -1,4 +1,4 @@
-export type Category = "center" | "code" | "research" | "outreach" | "creativity";
+export type Category = "center" | "code" | "research" | "outreach" | "services";
 
 export interface SubItem {
   id: string;
@@ -67,7 +67,7 @@ export const primaryNodes: GraphNode[] = [
     mass: 24,
     tag: "~/research",
     description:
-      "Neuroscience at UTD. Interests spanning oculoplastics, cardiology, and EMG-driven interfaces.",
+      "8 publications in cardiovascular surgery and structural heart disease — interventional cardiology, the Ross procedure, TAVR outcomes, and structural valve repair.",
   },
   {
     id: "outreach",
@@ -79,13 +79,13 @@ export const primaryNodes: GraphNode[] = [
       "Teaching, coaching, and lowering the activation energy for the next person who wants to build something.",
   },
   {
-    id: "creativity",
-    label: "Creativity",
-    category: "creativity",
+    id: "services",
+    label: "Services",
+    category: "services",
     mass: 18,
-    tag: "~/creativity",
+    tag: "~/services",
     description:
-      "Ricing terminals, obsessing over horology and automotive design. Taste, compounded.",
+      "Tutoring and development services — SAT, MCAT, and full-stack web work.",
   },
 ];
 
@@ -99,44 +99,80 @@ export const subItems: Record<Exclude<Category, "center">, SubItem[]> = {
       id: "soma",
       label: "Soma",
       blurb:
-        "Flashcard + study OS built on FSRS. Flutter front-end, Go backend, pragmatic spaced-repetition math.",
-      stack: ["Flutter", "Go", "FSRS", "Postgres"],
+        "Adaptive MCAT study platform built to be more frictionless than Anki — spaced repetition, active recall research, and a UX designed for pre-med students.",
+      stack: ["Next.js", "TypeScript", "FSRS", "Supabase"],
     },
     {
-      id: "spikeprep",
-      label: "SpikePrep",
+      id: "brainbird",
+      label: "BrainBird",
       blurb:
-        "Adaptive SAT platform — item-response theory driven difficulty, diagnostic-first onboarding.",
-      stack: ["Next.js", "TypeScript", "IRT", "Supabase"],
+        "Open-source EMG exhibit: an ESP32 reads muscle electrical potentials and lets participants control a custom Flappy Bird clone via arm-squeeze signals. Full hardware schematics + source published.",
+      stack: ["C++", "ESP32", "Python", "Arduino"],
     },
     {
-      id: "locus",
-      label: "Locus",
+      id: "the-long-road",
+      label: "The Long Road",
       blurb:
-        "AI-assisted credentialing for healthcare. Structured extraction, verification loops, audit trails.",
-      stack: ["TypeScript", "LLMs", "RAG", "Postgres"],
+        "2D pixel game traveling through U.S. drug-legislation history. Players stop at landmark laws to learn about their passage and downstream inequities; ends with a direct link to real-world advocacy orgs.",
+      stack: ["GDScript", "Godot"],
     },
   ],
   research: [
     {
-      id: "neuro-utd",
-      label: "Neuroscience @ UTD",
+      id: "pub-tricuspid",
+      label: "Functional Tricuspid Regurgitation",
       blurb:
-        "Coursework + lab rotations. Focus on systems neuroscience and translational interfaces.",
-      stack: ["MATLAB", "Python", "Signal Processing"],
+        "Compared outcomes of atrial vs. ventricular functional tricuspid regurgitation in a contemporary structural heart population. Contributed clinical data collection and analysis.",
+      link: { label: "JACC 2026", href: "https://www.jacc.org/doi/10.1016/S0735-1097%2826%2900000-0" },
     },
     {
-      id: "oculo-cardio",
-      label: "Oculoplastics & Cardiology",
+      id: "pub-mals",
+      label: "Median Arcuate Ligament Syndrome",
       blurb:
-        "Clinical interests at the boundary of surgical reconstruction and cardiovascular physiology.",
+        "Multidisciplinary ultrasound-guided diagnosis of MALS, with a focus on the role of interventional cardiology and vascular surgery in robotic release. Contributed manuscript preparation and literature review.",
+      link: { label: "JSCAI 2026", href: "https://www.jscai.org" },
     },
     {
-      id: "emg",
-      label: "EMG Sensor Projects",
+      id: "pub-laa",
+      label: "ICE-Guided LAA Occlusion Registry",
       blurb:
-        "Surface EMG rigs for gesture + rehab signal capture. Hardware + DSP + real-time viz.",
-      stack: ["C++", "Arduino", "Python", "DSP"],
+        "Single-center registry of intracardiac echocardiography-guided left atrial appendage occlusion procedures. Contributed data organization and manuscript drafting.",
+      link: { label: "Cardiovascular Interventions 2026", href: "https://www.jacc.org/journal/interventions" },
+    },
+    {
+      id: "pub-tavr-kccq",
+      label: "TAVR: PPM & Quality of Life",
+      blurb:
+        "Examined the impact of patient-prosthetic mismatch stratified by flow status on KCCQ quality-of-life scores after transcatheter aortic valve replacement. Acknowledged contributor.",
+      link: { label: "JACC 2025", href: "https://www.jacc.org" },
+    },
+    {
+      id: "pub-mitral",
+      label: "Functional Mitral Regurgitation (TCT)",
+      blurb:
+        "Compared outcomes of atrial vs. ventricular functional mitral regurgitation in a contemporary structural heart population. Acknowledged contributor; presented at TCT 2025.",
+      link: { label: "JACC 2025", href: "https://www.jacc.org" },
+    },
+    {
+      id: "pub-ross-age",
+      label: "Ross Procedure: Age Stratification",
+      blurb:
+        "Multicenter North American Ross Consortium study comparing short and mid-term outcomes of the Ross procedure in patients above and below 50 years of age.",
+      link: { label: "JTCVS Open 2026", href: "https://www.jtcvsopen.org" },
+    },
+    {
+      id: "pub-ross-prior",
+      label: "Ross Procedure After Prior AV Intervention",
+      blurb:
+        "Outcomes analysis from the North American Ross Consortium Database for patients undergoing the Ross procedure after a prior aortic valve intervention.",
+      link: { label: "JTCVS Open 2026", href: "https://www.jtcvsopen.org" },
+    },
+    {
+      id: "pub-ppm-qol",
+      label: "Patient-Prosthesis Mismatch & QoL Post-TAVI",
+      blurb:
+        "Analyzed the impact of both measured and predicted patient-prosthesis mismatch on quality of life following transcatheter aortic valve implantation. Contributed data collection and analysis.",
+      link: { label: "Structural Heart 2025", href: "https://www.structuralheart.org" },
     },
   ],
   outreach: [
@@ -144,13 +180,13 @@ export const subItems: Record<Exclude<Category, "center">, SubItem[]> = {
       id: "robotics",
       label: "Title I Robotics Coach",
       blurb:
-        "Coaching a Title I middle-school robotics team. Build seasons, demos, and a lot of zip ties.",
+        "Head coach of a rookie FTC team at a Title I school — guided first-time competitors through a full season. Team placed Division Finalist at Texas State Championship; coach nominated for Compass Award.",
     },
     {
       id: "sat-tutor",
       label: "SAT Tutoring",
       blurb:
-        "One-on-one SAT tutoring — the feedback loop that eventually turned into SpikePrep.",
+        "Designed and led free SAT prep boot camps for underserved students; helped multiple students achieve 100+ point score increases through tailored content review and strategy.",
     },
     {
       id: "neuro-demos",
@@ -158,26 +194,38 @@ export const subItems: Record<Exclude<Category, "center">, SubItem[]> = {
       blurb:
         "Bringing EEG / EMG demos into classrooms. Brains are a surprisingly good hook.",
     },
+    {
+      id: "project-pink",
+      label: "Project Pink UTD",
+      blurb:
+        "Co-President (2025–present) and former Outreach Coordinator — directing club operations, fundraisers, and social events for an organization advancing mental health resources and advocacy for women on campus.",
+    },
+    {
+      id: "msf-utd",
+      label: "Friends of MSF — UTD",
+      blurb:
+        "Event Coordinator for the UTD chapter of Doctors Without Borders — planned and managed campus fundraisers, contributing to $1,000+ raised for MSF within one academic year.",
+    },
   ],
-  creativity: [
+  services: [
     {
-      id: "ricing",
-      label: "Terminal Ricing",
+      id: "sat-tutoring",
+      label: "SAT Tutoring",
       blurb:
-        "Ghostty + Starship + tmux. Tokyo Night everything. The dotfiles are the portfolio.",
-      stack: ["Ghostty", "Starship", "tmux", "Neovim"],
+        "One-on-one SAT prep — diagnostic-first approach, targeted content review, and test strategy. Proven track record of 100+ point score improvements.",
     },
     {
-      id: "horology",
-      label: "Horology",
+      id: "mcat-tutoring",
+      label: "MCAT Tutoring",
       blurb:
-        "Mechanical watches — caliber nerdery, finishing, and why a second hand sweeps.",
+        "MCAT prep from a 521 (98th percentile) scorer — spaced repetition strategy, content review, and passage-based reasoning for all four sections.",
     },
     {
-      id: "auto",
-      label: "Automotive Design",
+      id: "web-dev",
+      label: "Full Stack Web Dev",
       blurb:
-        "Proportions, stance, interior ergonomics. The original UX.",
+        "Full-stack development and ongoing site maintenance — from greenfield builds to keeping existing products running, updated, and fast.",
+      stack: ["Next.js", "TypeScript", "React", "Supabase"],
     },
   ],
 };
@@ -198,7 +246,7 @@ export const PRIMARY_ANGLES: Record<Exclude<Category, "center">, number> = {
   code: -Math.PI / 2 + LAYOUT_ROTATION,
   research: LAYOUT_ROTATION,
   outreach: Math.PI / 2 + LAYOUT_ROTATION,
-  creativity: Math.PI + LAYOUT_ROTATION,
+  services: Math.PI + LAYOUT_ROTATION,
 };
 
 /** Fraction of min(viewport width, height) used for the primary ring. */
@@ -288,7 +336,7 @@ export function buildGraph(): { nodes: GraphNode[]; links: GraphLink[] } {
     "code",
     "research",
     "outreach",
-    "creativity",
+    "services",
   ];
 
   // Center → primary edges (visual only; physics is driven by anchors).
@@ -315,10 +363,10 @@ export function buildGraph(): { nodes: GraphNode[]; links: GraphLink[] } {
   const crossPairs: [string, string, boolean?][] = [
     ["code", "research"],
     ["research", "outreach"],
-    ["outreach", "creativity"],
-    ["creativity", "code"],
+    ["outreach", "services"],
+    ["services", "code"],
     ["code", "outreach", true],
-    ["research", "creativity", true],
+    ["research", "services", true],
   ];
   for (const [a, b, weak] of crossPairs) {
     links.push({ source: a, target: b, strength: 0, distance: 300, weak });
@@ -327,10 +375,12 @@ export function buildGraph(): { nodes: GraphNode[]; links: GraphLink[] } {
   // A handful of sub→primary cross-category links for extra web density.
   const subCross: [string, string][] = [
     ["soma", "research"],
-    ["emg", "code"],
-    ["neuro-demos", "research"],
-    ["spikeprep", "outreach"],
-    ["ricing", "code"],
+    ["brainbird", "outreach"],
+    ["the-long-road", "outreach"],
+    ["sat-tutoring", "outreach"],
+    ["mcat-tutoring", "research"],
+    ["web-dev", "code"],
+    ["pub-tavr-kccq", "code"],
   ];
   for (const [a, b] of subCross) {
     links.push({ source: a, target: b, strength: 0, distance: 250, weak: true });
@@ -348,7 +398,7 @@ export const categoryColor: Record<Category, string> = {
   code: "#7aa2f7",
   research: "#bb9af7",
   outreach: "#9ece6a",
-  creativity: "#ff9e64",
+  services: "#2ac3de",
 };
 
 export const categoryGlow: Record<Category, string> = {
@@ -356,5 +406,5 @@ export const categoryGlow: Record<Category, string> = {
   code: "rgba(122, 162, 247, 0.55)",
   research: "rgba(187, 154, 247, 0.55)",
   outreach: "rgba(158, 206, 106, 0.55)",
-  creativity: "rgba(255, 158, 100, 0.55)",
+  services: "rgba(42, 195, 222, 0.55)",
 };
