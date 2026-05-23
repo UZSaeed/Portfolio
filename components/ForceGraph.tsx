@@ -164,9 +164,9 @@ export default function ForceGraph({ onSelectPrimary, expandedCategory }: Props)
       .force(
         "collide",
         forceCollide<SimNode>((n) => {
-          if (n.id === CENTER_ID) return nodeRadius(n) + 60;
-          if (!n.parent) return nodeRadius(n) + 72;
-          return nodeRadius(n) + 38;
+          if (n.id === CENTER_ID) return nodeRadius(n) + 72;
+          if (!n.parent) return nodeRadius(n) + 90;
+          return nodeRadius(n) + 48;
         })
           .strength(0.95)
           .iterations(2),

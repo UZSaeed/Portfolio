@@ -1,4 +1,4 @@
-export type Category = "center" | "code" | "research" | "outreach" | "services";
+export type Category = "center" | "projects" | "research" | "clinical" | "services";
 
 export interface SubItem {
   id: string;
@@ -52,13 +52,13 @@ export const primaryNodes: GraphNode[] = [
       "Student at UT Dallas. I build software that sits between systems and people — adaptive learning tools, neuro-research instruments, and the occasional terminal rice.",
   },
   {
-    id: "code",
-    label: "Code",
-    category: "code",
+    id: "projects",
+    label: "Outreach + Projects",
+    category: "projects",
     mass: 26,
-    tag: "~/code",
+    tag: "~/projects",
     description:
-      "Software engineering: adaptive learning, full-stack products, developer tools. Shipping things people actually open twice.",
+      "Software, hardware, and games built to teach and demo — open-sourced where it matters so the next person can pick it up and run with it.",
   },
   {
     id: "research",
@@ -70,13 +70,13 @@ export const primaryNodes: GraphNode[] = [
       "8 publications in cardiovascular surgery and structural heart disease — interventional cardiology, the Ross procedure, TAVR outcomes, and structural valve repair.",
   },
   {
-    id: "outreach",
-    label: "Outreach & Advocacy",
-    category: "outreach",
+    id: "clinical",
+    label: "Clinical",
+    category: "clinical",
     mass: 22,
-    tag: "~/outreach",
+    tag: "~/clinical",
     description:
-      "Teaching, coaching, and lowering the activation energy for the next person who wants to build something.",
+      "1,000+ hours bedside and shadowing — electrophysiology, interventional and structural cardiology, cardiothoracic surgery, and the OR. Where the research meets the patient.",
   },
   {
     id: "services",
@@ -94,7 +94,7 @@ export const primaryNodes: GraphNode[] = [
 /* ------------------------------------------------------------------ */
 
 export const subItems: Record<Exclude<Category, "center">, SubItem[]> = {
-  code: [
+  projects: [
     {
       id: "soma",
       label: "Soma",
@@ -117,6 +117,14 @@ export const subItems: Record<Exclude<Category, "center">, SubItem[]> = {
         "2D pixel game traveling through U.S. drug-legislation history. Players stop at landmark laws to learn about their passage and downstream inequities; ends with a direct link to real-world advocacy orgs.",
       stack: ["GDScript", "Godot"],
       link: { label: "Play", href: "/thelongroad", external: false },
+    },
+    {
+      id: "translatemyrx",
+      label: "TranslateMyRX",
+      blurb:
+        "Multi-language medication tracker built to close the language gap in healthcare. Patients log their meds, get reminders, and read descriptions sourced from reputable references — all translated into their preferred language.",
+      stack: ["Next.js", "TypeScript", "i18n"],
+      link: { label: "Open", href: "https://www.translatemyrx.com", external: true },
     },
   ],
   research: [
@@ -177,36 +185,30 @@ export const subItems: Record<Exclude<Category, "center">, SubItem[]> = {
       link: { label: "Structural Heart 2025", href: "https://www.structuralheart.org" },
     },
   ],
-  outreach: [
+  clinical: [
     {
-      id: "robotics",
-      label: "Title I Robotics Coach",
+      id: "ep-ma",
+      label: "Volunteer MA — Electrophysiology",
       blurb:
-        "Head coach of a rookie FTC team at a Title I school — guided first-time competitors through a full season. Team placed Division Finalist at Texas State Championship; coach nominated for Compass Award.",
+        "First direct patient care role at a rural cardiology subspecialty clinic — vitals, EKGs, H&P scribing, and shadowed an electrophysiologist through consults and procedures. 160 hrs.",
     },
     {
-      id: "sat-tutor",
-      label: "SAT Tutoring",
+      id: "ic-ma",
+      label: "Volunteer MA — Interventional Cardiology",
       blurb:
-        "Designed and led free SAT prep boot camps for underserved students; helped multiple students achieve 100+ point score increases through tailored content review and strategy.",
+        "420 hours over a year in an interventional cardiology outpatient clinic — taking vitals, prepping rooms, scribing, and learning how patient communication actually works in a fast-paced subspecialty.",
     },
     {
-      id: "neuro-demos",
-      label: "Neuro Outreach Demos",
+      id: "bsw-shadow",
+      label: "Structural Heart Shadowing",
       blurb:
-        "Bringing EEG / EMG demos into classrooms. Brains are a surprisingly good hook.",
+        "250 hours at Baylor Scott & White The Heart Hospital across valve clinic, cath lab, general and preventative cardiology, and cardiothoracic surgery — the clinical side of the research I work on.",
     },
     {
-      id: "project-pink",
-      label: "Project Pink UTD",
+      id: "retina-obs",
+      label: "Retina Surgery Observation",
       blurb:
-        "Co-President (2025–present) and former Outreach Coordinator — directing club operations, fundraisers, and social events for an organization advancing mental health resources and advocacy for women on campus.",
-    },
-    {
-      id: "msf-utd",
-      label: "Friends of MSF — UTD",
-      blurb:
-        "Event Coordinator for the UTD chapter of Doctors Without Borders — planned and managed campus fundraisers, contributing to $1,000+ raised for MSF within one academic year.",
+        "Observed vitrectomies and scleral buckles in the OR plus intravitreal injections and laser photocoagulation in clinic — stepping outside the cardiology comfort zone.",
     },
   ],
   services: [
@@ -245,16 +247,16 @@ export const subItems: Record<Exclude<Category, "center">, SubItem[]> = {
 const LAYOUT_ROTATION = Math.PI / 8;
 
 export const PRIMARY_ANGLES: Record<Exclude<Category, "center">, number> = {
-  code: -Math.PI / 2 + LAYOUT_ROTATION,
+  projects: -Math.PI / 2 + LAYOUT_ROTATION,
   research: LAYOUT_ROTATION,
-  outreach: Math.PI / 2 + LAYOUT_ROTATION,
+  clinical: Math.PI / 2 + LAYOUT_ROTATION,
   services: Math.PI + LAYOUT_ROTATION,
 };
 
 /** Fraction of min(viewport width, height) used for the primary ring. */
-const PRIMARY_RADIUS_FRAC = 0.46;
+const PRIMARY_RADIUS_FRAC = 0.54;
 /** Fraction of min(viewport width, height) used for the sub-node ring. */
-const SUB_RADIUS_FRAC = 0.62;
+const SUB_RADIUS_FRAC = 0.74;
 /** Half-width of the fan that holds a primary's three sub-nodes (radians). */
 const SUB_FAN_HALF = 1.1;
 
@@ -335,9 +337,9 @@ export function buildGraph(): { nodes: GraphNode[]; links: GraphLink[] } {
   const links: GraphLink[] = [];
 
   const primaryIds: Exclude<Category, "center">[] = [
-    "code",
+    "projects",
     "research",
-    "outreach",
+    "clinical",
     "services",
   ];
 
@@ -363,11 +365,11 @@ export function buildGraph(): { nodes: GraphNode[]; links: GraphLink[] } {
 
   // Cross-links — all primary pairs for a fully connected, messy mesh.
   const crossPairs: [string, string, boolean?][] = [
-    ["code", "research"],
-    ["research", "outreach"],
-    ["outreach", "services"],
-    ["services", "code"],
-    ["code", "outreach", true],
+    ["projects", "research"],
+    ["research", "clinical"],
+    ["clinical", "services"],
+    ["services", "projects"],
+    ["projects", "clinical", true],
     ["research", "services", true],
   ];
   for (const [a, b, weak] of crossPairs) {
@@ -377,12 +379,13 @@ export function buildGraph(): { nodes: GraphNode[]; links: GraphLink[] } {
   // A handful of sub→primary cross-category links for extra web density.
   const subCross: [string, string][] = [
     ["soma", "research"],
-    ["brainbird", "outreach"],
-    ["the-long-road", "outreach"],
-    ["sat-tutoring", "outreach"],
+    ["brainbird", "clinical"],
+    ["the-long-road", "clinical"],
+    ["translatemyrx", "clinical"],
     ["mcat-tutoring", "research"],
-    ["web-dev", "code"],
-    ["pub-tavr-kccq", "code"],
+    ["web-dev", "projects"],
+    ["pub-tavr-kccq", "projects"],
+    ["bsw-shadow", "research"],
   ];
   for (const [a, b] of subCross) {
     links.push({ source: a, target: b, strength: 0, distance: 250, weak: true });
@@ -397,16 +400,16 @@ export function buildGraph(): { nodes: GraphNode[]; links: GraphLink[] } {
 
 export const categoryColor: Record<Category, string> = {
   center: "#c0caf5",
-  code: "#7aa2f7",
+  projects: "#7aa2f7",
   research: "#bb9af7",
-  outreach: "#9ece6a",
+  clinical: "#f7768e",
   services: "#2ac3de",
 };
 
 export const categoryGlow: Record<Category, string> = {
   center: "rgba(192, 202, 245, 0.55)",
-  code: "rgba(122, 162, 247, 0.55)",
+  projects: "rgba(122, 162, 247, 0.55)",
   research: "rgba(187, 154, 247, 0.55)",
-  outreach: "rgba(158, 206, 106, 0.55)",
+  clinical: "rgba(247, 118, 142, 0.55)",
   services: "rgba(42, 195, 222, 0.55)",
 };
