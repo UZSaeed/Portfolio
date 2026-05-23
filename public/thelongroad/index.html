@@ -1,0 +1,2288 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>The Long Walk — Drug Policy & Race in America</title>
+  <meta name="description" content="A pixel-art walk through 90 years of American drug policy and its racial architecture." />
+  <style>
+    :root {
+      --ink: #0c0a0a;
+      --paper: #efe7d5;
+      --accent: #e8a94a;
+      --accent-2: #7cb89a;
+      --danger: #c55a3a;
+      --muted: #8a7f6a;
+      --radius: 4px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #000;
+      color: var(--paper);
+      font-family: 'Courier New', ui-monospace, Menlo, monospace;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+    }
+
+    #stage {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: #000;
+    }
+
+    #frame {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      max-width: 100vw;
+      max-height: 100vh;
+      overflow: hidden;
+    }
+
+    canvas#game {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      image-rendering: pixelated;
+      image-rendering: -moz-crisp-edges;
+      image-rendering: crisp-edges;
+      background: #000;
+      display: block;
+    }
+
+    /* HUD year ticker */
+    #hud {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      padding: 8px 12px;
+      background: rgba(12, 10, 10, 0.72);
+      border: 1px solid rgba(239, 231, 213, 0.2);
+      color: var(--paper);
+      font-family: 'Press Start 2P', 'Courier New', monospace;
+      font-size: 11px;
+      letter-spacing: 1px;
+      z-index: 20;
+      pointer-events: none;
+      transition: opacity 260ms ease;
+    }
+    #hud .year { color: var(--accent); }
+    #hud .sub { display: block; font-size: 8px; opacity: 0.72; margin-top: 4px; letter-spacing: 0.5px; }
+
+    /* Back-to-portfolio link */
+    #backlink {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 70;
+      padding: 8px 12px;
+      background: rgba(12, 10, 10, 0.72);
+      border: 1px solid var(--paper);
+      color: var(--paper);
+      font-family: 'Press Start 2P', 'Courier New', monospace;
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      text-decoration: none;
+      transition: background 120ms ease, color 120ms ease, transform 120ms ease;
+    }
+    #backlink:hover {
+      background: var(--paper);
+      color: var(--ink);
+      transform: translateY(-1px);
+    }
+    #backlink .arrow { color: var(--accent); margin-right: 6px; }
+    #backlink:hover .arrow { color: var(--ink); }
+
+    /* Progress dots */
+    #progress {
+      position: absolute;
+      top: 48px;
+      right: 18px;
+      display: flex;
+      gap: 8px;
+      z-index: 20;
+      pointer-events: none;
+    }
+    #progress .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: rgba(239, 231, 213, 0.2);
+      border: 1px solid rgba(239, 231, 213, 0.4);
+      transition: background 260ms ease, transform 260ms ease;
+    }
+    #progress .dot.read { background: var(--accent); border-color: var(--accent); }
+    #progress .dot.current { transform: scale(1.35); }
+
+    /* Proximity bubble above player */
+    #prompt {
+      position: absolute;
+      pointer-events: none;
+      z-index: 25;
+      background: rgba(12, 10, 10, 0.92);
+      border: 1px solid var(--accent);
+      color: var(--paper);
+      padding: 6px 10px;
+      font-family: 'Press Start 2P', 'Courier New', monospace;
+      font-size: 9px;
+      letter-spacing: 1px;
+      border-radius: var(--radius);
+      transform: translate(-50%, -100%);
+      opacity: 0;
+      transition: opacity 180ms ease;
+      white-space: nowrap;
+    }
+    #prompt.visible { opacity: 1; }
+    #prompt .key {
+      display: inline-block;
+      background: var(--accent);
+      color: var(--ink);
+      padding: 2px 5px;
+      margin-right: 6px;
+      border-radius: 2px;
+    }
+    #prompt::after {
+      content: "";
+      position: absolute;
+      bottom: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0; height: 0;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 6px solid var(--accent);
+    }
+
+    /* Floating post-read line */
+    #floater {
+      position: absolute;
+      pointer-events: none;
+      z-index: 24;
+      color: var(--paper);
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+      background: rgba(12, 10, 10, 0.78);
+      padding: 6px 10px;
+      border-left: 3px solid var(--accent-2);
+      transform: translate(-50%, -100%);
+      opacity: 0;
+      transition: opacity 420ms ease, transform 420ms ease;
+      max-width: 340px;
+      text-align: left;
+      font-style: italic;
+    }
+    #floater.visible { opacity: 1; transform: translate(-50%, calc(-100% - 8px)); }
+
+    /* Dialogue box (bottom center) */
+    #dialogue {
+      position: absolute;
+      left: 50%;
+      bottom: 90px;
+      transform: translateX(-50%);
+      width: min(720px, 88vw);
+      background: rgba(12, 10, 10, 0.94);
+      border: 2px solid var(--paper);
+      padding: 16px 18px 14px;
+      z-index: 30;
+      display: none;
+      color: var(--paper);
+      box-shadow: 0 0 0 3px rgba(0,0,0,0.5), 0 14px 40px rgba(0,0,0,0.65);
+    }
+    #dialogue.visible { display: block; }
+    #dialogue .speaker {
+      font-family: 'Press Start 2P', 'Courier New', monospace;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      color: var(--accent);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+    #dialogue .text {
+      font-size: 15px;
+      line-height: 1.55;
+      min-height: 3em;
+    }
+    #dialogue .hint {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 12px;
+      font-size: 10px;
+      color: var(--muted);
+      font-family: 'Press Start 2P', 'Courier New', monospace;
+      letter-spacing: 1px;
+      opacity: 0;
+      transition: opacity 300ms ease;
+    }
+    #dialogue .hint.ready { opacity: 1; animation: blink 1s infinite; }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+    /* Info overlay (policy card) */
+    #overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.78);
+      backdrop-filter: blur(3px);
+      z-index: 40;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      overflow-y: auto;
+    }
+    #overlay.visible { display: flex; }
+    #overlay .card {
+      background: var(--paper);
+      color: var(--ink);
+      max-width: 640px;
+      width: 100%;
+      max-height: 86vh;
+      overflow-y: auto;
+      border: 3px solid var(--ink);
+      padding: 28px 30px 24px;
+      font-family: 'Courier New', monospace;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+      user-select: text;
+    }
+    #overlay .year-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 2px dashed rgba(12,10,10,0.3);
+      padding-bottom: 10px;
+      margin-bottom: 16px;
+    }
+    #overlay .year {
+      font-family: 'Press Start 2P', 'Courier New', monospace;
+      font-size: 22px;
+      color: var(--ink);
+      letter-spacing: 2px;
+    }
+    #overlay .zone-label {
+      font-family: 'Press Start 2P', 'Courier New', monospace;
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 2px;
+    }
+    #overlay h2 {
+      font-family: 'Press Start 2P', 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.5;
+      margin: 0 0 14px;
+      color: var(--ink);
+      letter-spacing: 0.5px;
+    }
+    #overlay h3 {
+      font-family: 'Press Start 2P', 'Courier New', monospace;
+      font-size: 10px;
+      margin: 20px 0 8px;
+      color: var(--danger);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+    #overlay p {
+      font-size: 14.5px;
+      line-height: 1.65;
+      margin: 0 0 12px;
+    }
+    #overlay ul {
+      margin: 0 0 12px;
+      padding-left: 22px;
+    }
+    #overlay li {
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 6px;
+    }
+    #overlay .quote {
+      border-left: 4px solid var(--danger);
+      padding: 6px 0 6px 14px;
+      margin: 14px 0;
+      font-style: italic;
+      color: #2a241d;
+      font-size: 14.5px;
+      line-height: 1.6;
+    }
+    #overlay .close {
+      display: block;
+      margin: 24px auto 0;
+      padding: 12px 24px;
+      background: var(--ink);
+      color: var(--paper);
+      border: none;
+      font-family: 'Press Start 2P', 'Courier New', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: transform 120ms ease, background 120ms ease;
+    }
+    #overlay .close:hover { background: var(--danger); transform: translateY(-1px); }
+    #overlay .close:active { transform: translateY(0); }
+
+    /* End screen */
+    #end {
+      position: absolute;
+      inset: 0;
+      z-index: 50;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(ellipse at center, #1a1512 0%, #000 80%);
+      padding: 24px;
+      overflow-y: auto;
+    }
+    #end.visible { display: flex; }
+    #end .wrap {
+      max-width: 640px;
+      text-align: center;
+      animation: fadeUp 900ms ease both;
+    }
+    #end h1 {
+      font-family: 'Press Start 2P', 'Courier New', monospace;
+      font-size: 22px;
+      letter-spacing: 3px;
+      color: var(--accent);
+      margin: 0 0 24px;
+    }
+    #end p {
+      font-size: 15px;
+      line-height: 1.7;
+      margin: 0 0 14px;
+      color: var(--paper);
+    }
+    #end .signoff {
+      font-family: 'Press Start 2P', 'Courier New', monospace;
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: var(--accent-2);
+      margin-top: 28px;
+      margin-bottom: 18px;
+    }
+    #end .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 18px;
+    }
+    #end .links a {
+      color: var(--ink);
+      background: var(--paper);
+      padding: 10px 14px;
+      text-decoration: none;
+      font-family: 'Press Start 2P', 'Courier New', monospace;
+      font-size: 9px;
+      letter-spacing: 1px;
+      border: 2px solid var(--paper);
+      transition: transform 120ms ease, background 120ms ease;
+    }
+    #end .links a:hover { background: var(--accent); transform: translateY(-2px); }
+    #end .walkback {
+      display: inline-block;
+      margin-top: 30px;
+      padding: 12px 22px;
+      background: transparent;
+      color: var(--paper);
+      border: 2px solid var(--paper);
+      font-family: 'Press Start 2P', 'Courier New', monospace;
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      transition: background 120ms ease, color 120ms ease;
+    }
+    #end .walkback:hover { background: var(--paper); color: var(--ink); }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Mobile touch controls */
+    #touch {
+      position: absolute;
+      bottom: 14px;
+      left: 0;
+      right: 0;
+      z-index: 35;
+      display: none;
+      justify-content: space-between;
+      padding: 0 22px;
+      pointer-events: none;
+    }
+    #touch .side {
+      display: flex;
+      gap: 12px;
+      pointer-events: auto;
+    }
+    #touch button {
+      width: 62px;
+      height: 62px;
+      border-radius: 50%;
+      background: rgba(12, 10, 10, 0.7);
+      border: 2px solid rgba(239, 231, 213, 0.6);
+      color: var(--paper);
+      font-family: 'Press Start 2P', 'Courier New', monospace;
+      font-size: 11px;
+      letter-spacing: 1px;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 80ms ease, transform 80ms ease;
+    }
+    #touch button:active {
+      background: var(--accent);
+      color: var(--ink);
+      transform: scale(0.94);
+    }
+    #touch #btn-int {
+      width: 72px;
+      height: 72px;
+      border-color: var(--accent);
+    }
+
+    /* Start screen */
+    #start {
+      position: absolute;
+      inset: 0;
+      z-index: 60;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(ellipse at center, #1a120e 0%, #000 75%);
+      padding: 20px;
+      text-align: center;
+    }
+    #start.hidden { display: none; }
+    #start .wrap { max-width: 560px; }
+    #start h1 {
+      font-family: 'Press Start 2P', 'Courier New', monospace;
+      font-size: 28px;
+      color: var(--accent);
+      letter-spacing: 4px;
+      margin: 0 0 10px;
+      text-shadow: 4px 4px 0 #2a1410;
+    }
+    #start .subtitle {
+      font-family: 'Press Start 2P', 'Courier New', monospace;
+      font-size: 10px;
+      color: var(--accent-2);
+      letter-spacing: 3px;
+      margin-bottom: 28px;
+    }
+    #start .blurb {
+      font-size: 15px;
+      line-height: 1.7;
+      margin-bottom: 22px;
+      color: var(--paper);
+    }
+    #start .controls-grid {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px 18px;
+      justify-content: center;
+      margin: 24px auto 28px;
+      max-width: 360px;
+      text-align: left;
+      font-family: 'Press Start 2P', 'Courier New', monospace;
+      font-size: 9px;
+      letter-spacing: 1px;
+      color: var(--paper);
+    }
+    #start .controls-grid .k {
+      color: var(--accent);
+      white-space: nowrap;
+    }
+    #start button {
+      padding: 14px 28px;
+      background: var(--accent);
+      color: var(--ink);
+      border: none;
+      font-family: 'Press Start 2P', 'Courier New', monospace;
+      font-size: 12px;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: transform 120ms ease, background 120ms ease;
+    }
+    #start button:hover { background: var(--paper); transform: translateY(-2px); }
+
+    .fade-out { animation: fadeOut 500ms ease forwards; }
+    @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
+
+    @media (max-width: 720px) {
+      #start h1 { font-size: 20px; letter-spacing: 2px; }
+      #start .subtitle { font-size: 8px; }
+      #overlay .year { font-size: 16px; }
+      #overlay h2 { font-size: 11px; }
+      #hud { font-size: 9px; padding: 6px 9px; }
+      #hud .sub { font-size: 7px; }
+      #progress .dot { width: 8px; height: 8px; }
+      #dialogue { bottom: 100px; padding: 12px 14px; }
+      #dialogue .text { font-size: 13px; }
+      #end h1 { font-size: 16px; letter-spacing: 2px; }
+      #backlink { font-size: 7px; padding: 6px 9px; letter-spacing: 1px; }
+    }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="stage">
+    <div id="frame">
+      <canvas id="game" width="800" height="450" aria-label="The Long Walk game canvas"></canvas>
+
+      <div id="hud" aria-live="polite">
+        <span class="year" id="hud-year">1937</span>
+        <span class="sub" id="hud-sub">The Marihuana Tax Act</span>
+      </div>
+
+      <a id="backlink" href="/" aria-label="Back to portfolio"><span class="arrow">&laquo;</span>BACK</a>
+
+      <div id="progress" aria-hidden="true"></div>
+
+      <div id="prompt" aria-hidden="true"><span class="key">E</span>READ PLAQUE</div>
+      <div id="floater" aria-hidden="true"></div>
+
+      <div id="dialogue" role="dialog" aria-live="polite">
+        <div class="speaker" id="dlg-speaker">NARRATOR</div>
+        <div class="text" id="dlg-text"></div>
+        <div class="hint" id="dlg-hint">[ E / SPACE / TAP ]</div>
+      </div>
+
+      <div id="overlay" role="dialog" aria-modal="true">
+        <div class="card" id="overlay-card">
+          <div class="year-row">
+            <div class="year" id="ov-year"></div>
+            <div class="zone-label" id="ov-zone"></div>
+          </div>
+          <h2 id="ov-title"></h2>
+          <div id="ov-body"></div>
+          <button class="close" id="ov-close">CLOSE [ESC]</button>
+        </div>
+      </div>
+
+      <div id="end">
+        <div class="wrap">
+          <h1>THE WALK<br/>CONTINUES.</h1>
+          <p>Ninety years. Six laws. One architecture of harm, built in plain sight, brick by legislative brick.</p>
+          <p>The disparity narrowed. It did not close. The reforms came. They were not repair. Thousands remain incarcerated under sentences the law itself now concedes were indefensible.</p>
+          <p>You walked the timeline. The next chapter isn't pixel art — it's written in the policies voters, organizers, and lawmakers choose next.</p>
+          <div class="signoff">— KEEP WALKING —</div>
+          <div class="links">
+            <a href="https://www.drugpolicy.org/" target="_blank" rel="noopener">Drug Policy Alliance</a>
+            <a href="https://www.sentencingproject.org/" target="_blank" rel="noopener">The Sentencing Project</a>
+            <a href="https://eji.org/" target="_blank" rel="noopener">Equal Justice Initiative</a>
+            <a href="https://lastprisonerproject.org/" target="_blank" rel="noopener">Last Prisoner Project</a>
+          </div>
+          <br/>
+          <button class="walkback" id="walkback">WALK BACK</button>
+        </div>
+      </div>
+
+      <div id="start">
+        <div class="wrap">
+          <h1>THE LONG WALK</h1>
+          <div class="subtitle">DRUG POLICY &amp; RACE IN AMERICA</div>
+          <div class="blurb">A ninety-year walk through the legal architecture of the American drug war — the laws, the numbers, and who paid.</div>
+          <div class="controls-grid">
+            <div class="k">← → / A D</div><div>Walk</div>
+            <div class="k">SHIFT + Walk</div><div>Sprint</div>
+            <div class="k">SPACE / W / ↑</div><div>Jump</div>
+            <div class="k">E</div><div>Read Plaque</div>
+            <div class="k">ESC</div><div>Close Overlay</div>
+          </div>
+          <button id="start-btn">BEGIN WALK</button>
+        </div>
+      </div>
+
+      <div id="touch" aria-hidden="true">
+        <div class="side">
+          <button id="btn-left" aria-label="Walk left">←</button>
+          <button id="btn-right" aria-label="Walk right">→</button>
+        </div>
+        <div class="side">
+          <button id="btn-int" aria-label="Interact">E</button>
+          <button id="btn-jump" aria-label="Jump">↑</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ============================================================
+  // CONSTANTS
+  // ============================================================
+  const LOGICAL_W = 800;
+  const LOGICAL_H = 450;
+  const GROUND_Y = 382;            // top of ground
+  const PLAYER_W = 18;
+  const PLAYER_H = 30;
+  const WALK_SPEED = 170;          // px/s
+  const SPRINT_MULT = 1.75;        // shift to sprint
+  const GRAVITY = 1500;            // px/s^2
+  const JUMP_V = -520;             // px/s
+  const CAMERA_LERP = 0.10;
+  const INTERACT_RADIUS = 62;      // px (center-to-center)
+  const WORLD_W = 5700;
+  const ZONE_W = 900;
+  const END_TRIGGER_X = 5600;
+
+  // ============================================================
+  // ZONES & HISTORICAL CONTENT
+  // ============================================================
+  const ZONES = [
+    {
+      id: 0,
+      year: '1937',
+      label: 'TENEMENT / JAZZ ERA',
+      law: 'The Marihuana Tax Act',
+      palette: {
+        skyTop: '#3a2418',
+        skyBot: '#8a5a3c',
+        far:    '#2a1810',
+        near:   '#4a2a1a',
+        ground: '#3a1f12',
+        groundHi: '#6a3a22',
+        accent: '#e8a94a'
+      },
+      plaqueX: 560,
+      proximityLine: 'Before cannabis was a crime, it was a tax — and the tax was the point.',
+      postLine: '"Reefer makes darkies think they\'re as good as white men." — Harry Anslinger, 1930s.',
+      overlay: {
+        title: 'The Marihuana Tax Act of 1937',
+        body: `
+          <p>After the end of the prohibition, Harry Anslinger, appointed in 1930 as the first commissioner of the Federal Bureau of Narcotics, focused on a new issue — cannabis.</p>
+          <p>His approach, however, had some very racial motivations, causing his enacted policy to disproportionately affect people of color. Anslinger's testimony and campaigns relentlessly tied "marihuana" (whose naming was weaponized to racialize the substance instead of simply calling it cannabis) to Black musicians, Mexican laborers, and "moral degeneracy."</p>
+          <div class="quote">"Reefer makes darkies think they're as good as white men... the primary reason to outlaw marijuana is its effect on the degenerate races."</div>
+          <h3>How It Worked</h3>
+          <p>As opposed to banning cannabis directly, the law created a prohibitive tax and registration system. Without a stamp, possession was a federal crime — and stamps were nearly impossible to get.</p>
+          <h3>The Architecture Begins</h3>
+          <p>This law began a pattern of legislation that other stops along the road ahead will echo: pairing a substance with a minority group and criminalizing it using race-neutral language — leading to disproportionate enforcement without it being unconstitutional.</p>
+        `
+      }
+    },
+    {
+      id: 1,
+      year: '1970',
+      label: 'FEDERAL DISTRICT',
+      law: 'The Controlled Substances Act',
+      palette: {
+        skyTop: '#2a2e26',
+        skyBot: '#5a6150',
+        far:    '#1a1e18',
+        near:   '#2e342a',
+        ground: '#23271f',
+        groundHi: '#4a5240',
+        accent: '#b8c296'
+      },
+      plaqueX: 580,
+      proximityLine: 'Nixon took the playbook Anslinger drafted and made it permanent.',
+      postLine: '"We knew we couldn\'t make it illegal to be either against the war or Black... but by getting the public to associate the hippies with marijuana and blacks with heroin, and then criminalizing both heavily, we could disrupt those communities." — John Ehrlichman',
+      overlay: {
+        title: 'The Controlled Substances Act of 1970',
+        body: `
+          <p>Nixon's administration made these patterns more permanent with the creation of this act. Cannabis got placed in the Schedule I tier, classifying it right alongside heroin. This happened despite the administration's own Shafer Commission recommending the decriminalization of the drug in 1972.</p>
+          <p>Nixon overruled this recommendation — his motive becoming much clearer decades later when John Ehrlichman said the following in an interview with Harper's:</p>
+          <div class="quote">"The Nixon campaign in 1968, and the Nixon White House after that, had two enemies: the antiwar left and Black people... We knew we couldn't make it illegal to be either against the war or Black, but by getting the public to associate the hippies with marijuana and Blacks with heroin, and then criminalizing both heavily, we could disrupt those communities. We could arrest their leaders, raid their homes, break up their meetings, and vilify them night after night on the evening news. Did we know we were lying about the drugs? Of course we did."</div>
+          <h3>How It Worked</h3>
+          <ul>
+            <li>Schedule I status blocked cannabis medical research for around fifty years.</li>
+            <li>The "race-neutral" framing of the law gave legal cover for stop-and-frisk, no-knock raids, and surveillance of Black Panther chapters and antiwar organizers.</li>
+            <li>The DEA, founded in 1973, inherited the whole apparatus and kept building on it.</li>
+          </ul>
+        `
+      }
+    },
+    {
+      id: 2,
+      year: '1986',
+      label: 'FEDERAL COURTHOUSE',
+      law: 'The Anti-Drug Abuse Act',
+      palette: {
+        skyTop: '#1a2230',
+        skyBot: '#3a4a60',
+        far:    '#12182a',
+        near:   '#1e2838',
+        ground: '#1a2130',
+        groundHi: '#3a4a68',
+        accent: '#7a9cc4'
+      },
+      plaqueX: 600,
+      proximityLine: 'Five grams of crack, or five hundred grams of powder — either way, the same five-year sentence.',
+      postLine: 'Crack and powder cocaine are chemically the same drug. The sentencing wasn\'t.',
+      overlay: {
+        title: 'The Anti-Drug Abuse Act of 1986',
+        body: `
+          <p>Following the overdose death of basketball player Len Bias, Congress passed the Anti-Drug Abuse Act with bipartisan support. What resulted was the clearest social disparity in enforcement seen along this road.</p>
+          <h3>The 100:1 Ratio</h3>
+          <p>Crack and powder cocaine are essentially the same drug, just prepared differently. Crack is generally cheaper, however, and was more common in lower SES Black urban neighborhoods compared to powder, which was more expensive and used primarily by white, suburban, and more affluent communities.</p>
+          <ul>
+            <li>While it only took <strong>5 grams</strong> of crack to trigger a 5-year mandatory federal sentence, <strong>500 grams</strong> of powder were needed to induce the same punishment.</li>
+            <li>This was a 100:1 disparity in enforcement by weight for the same drug used by different communities.</li>
+          </ul>
+          <h3>The Consequences</h3>
+          <p>Over the next two decades, hundreds of thousands of mandatory minimums were enforced under this act. By the late 1990s, more than 80% of federal crack defendants were Black — even though surveys at the time showed most crack users were white or Hispanic.</p>
+        `
+      }
+    },
+    {
+      id: 3,
+      year: '1994',
+      label: 'PRISON EXPANSION',
+      law: 'The Violent Crime Control Act',
+      palette: {
+        skyTop: '#0e0e12',
+        skyBot: '#2a2a30',
+        far:    '#08080c',
+        near:   '#16161c',
+        ground: '#101014',
+        groundHi: '#2a2a34',
+        accent: '#c5c5d0'
+      },
+      plaqueX: 620,
+      proximityLine: 'Federal money to build prisons, hire police, and lock more people up.',
+      postLine: 'The U.S. now incarcerates more people than any country in history — both per capita and total.',
+      overlay: {
+        title: 'The Violent Crime Control and Law Enforcement Act of 1994',
+        body: `
+          <p>The 1994 Crime Bill, signed by President Clinton with bipartisan support, was the most expansive federal crime legislation in American history.</p>
+          <h3>What It Funded</h3>
+          <ul>
+            <li><strong>$9.7 billion</strong> for new prison construction.</li>
+            <li><strong>100,000 new police officers</strong> funded through COPS grants.</li>
+            <li><strong>Truth-in-sentencing</strong> grants which gave federal money for states that required inmates to serve at least 85% of their sentences.</li>
+            <li><strong>Three-strikes</strong> provisions mandating life sentences for federal offenders with two prior felonies.</li>
+            <li><strong>60 new federal death-penalty offenses.</strong></li>
+          </ul>
+          <h3>The Result</h3>
+          <p>Because of this, the U.S. prison population doubled between 1990 and 2005. By the mid-2000s, the United States, despite having ~5% of the world population, held ~25% of prisoners.</p>
+          <p>These effects compounded across generations in Black communities leading to disenfranchisement, broken household economics, employment barriers, and a measurable drop in Black male wages tied to incarceration rates. While most of this incarceration happened at the state level, the act financed new prisons and incentivized inmates serving full sentences.</p>
+          <div class="quote">"I was wrong." — Bill Clinton, 2015, on the 1994 crime bill's racial impact.</div>
+        `
+      }
+    },
+    {
+      id: 4,
+      year: '2010 – 2018',
+      label: 'REFORM COURTROOM',
+      law: 'Fair Sentencing Act → First Step Act',
+      palette: {
+        skyTop: '#1e2a2e',
+        skyBot: '#5a7874',
+        far:    '#162224',
+        near:   '#2a3a3a',
+        ground: '#26322e',
+        groundHi: '#547068',
+        accent: '#9cc4b4'
+      },
+      plaqueX: 560,
+      proximityLine: 'The disparity got smaller. It didn\'t go away.',
+      postLine: '18:1 is still a disparity. And making changes retroactive isn\'t the same as making people whole.',
+      overlay: {
+        title: 'The Fair Sentencing Act (2010) & First Step Act (2018)',
+        body: `
+          <p>By the late 2000s, the 100:1 sentencing disparity from the 1986 act had become hard to defend for either party. What followed were two pieces of legislation aimed at reducing it.</p>
+          <h3>Fair Sentencing Act (2010)</h3>
+          <ul>
+            <li>Brought the crack/powder sentencing ratio down from <strong>100:1 to 18:1</strong>.</li>
+            <li>Eliminated the 5-year mandatory minimum for simple crack possession.</li>
+            <li>Did not apply retroactively, meaning thousands of people remained in prison under the prior law.</li>
+          </ul>
+          <h3>First Step Act (2018)</h3>
+          <ul>
+            <li>Made the Fair Sentencing Act's changes retroactive.</li>
+            <li>Allowed judges to sentence below mandatory minimums.</li>
+            <li>Reduced some three-strikes mandatory life sentences to 25 years.</li>
+            <li>Created earned-time credits for federal inmates who completed rehab programs.</li>
+          </ul>
+          <h3>What It Didn't Fix</h3>
+          <p>While the disparity was reduced, it still existed at 18:1. The First Step Act also only applied to federal inmates so because 87% of U.S. prisoners are in state systems, it had a limited impact. The process for petitioning for retroactive relief was also difficult, and thousands of eligible people never received it. Mandatory minimums for fentanyl and other drugs, however, were left alone or expanded.</p>
+        `
+      }
+    },
+    {
+      id: 5,
+      year: '2026',
+      label: 'SPLIT HORIZON',
+      law: 'Rescheduling • HALT Fentanyl',
+      palette: {
+        skyTop: '#1a1e2a',
+        skyBot: '#6a4a3a',
+        far:    '#14181e',
+        near:   '#2e2830',
+        ground: '#2a2628',
+        groundHi: '#5a4a42',
+        accent: '#e8a94a'
+      },
+      plaqueX: 520,
+      proximityLine: 'The same government easing up on one drug while cracking down harder on another.',
+      postLine: 'Reform for one drug. Tougher penalties for another. The same pattern as 1937.',
+      overlay: {
+        title: 'Cannabis Rescheduling & the HALT Fentanyl Act',
+        body: `
+          <p>As of 2026, two pieces of legislation are shaping federal drug policy in opposite directions. The split still follows a familiar pattern seen at every other stop along this road.</p>
+          <h3>Cannabis Rescheduling</h3>
+          <p>After a review initiated by President Biden in 2022, the DEA moved between 2024 and 2026 to reschedule cannabis from Schedule I to <strong>Schedule III</strong>. This was the first federal acknowledgement since 1970 that cannabis has accepted medical uses.</p>
+          <ul>
+            <li>Unlocks medical research that had been blocked by Schedule I restrictions for decades.</li>
+            <li>Ends the IRS 280E tax penalty that had been affecting state-legal cannabis businesses.</li>
+            <li>Does not federally legalize recreational use.</li>
+            <li>Does not automatically release anyone incarcerated on cannabis charges.</li>
+          </ul>
+          <h3>The HALT Fentanyl Act</h3>
+          <p>Passed with bipartisan majorities, the HALT Fentanyl Act <strong>permanently</strong> places fentanyl-related substances (an entire class defined by molecular similarity) into Schedule I. It applies the same mandatory-minimum structure seen in the 1986 crack sentencing — this time targeting a different substance affecting a different demographic.</p>
+          <h3>The Walk Continues...</h3>
+          <p>The policy is still being written. What happens next is up to this generation.</p>
+        `
+      }
+    }
+  ];
+
+  // ============================================================
+  // ONBOARDING & END DIALOGUE
+  // ============================================================
+  const ONBOARDING = [
+    { speaker: 'NARRATOR', text: 'You\'re about to walk ninety years of American history.' },
+    { speaker: 'NARRATOR', text: 'Six laws across six zones — each one a piece of how race got built into U.S. drug policy.' },
+    { speaker: 'NARRATOR', text: 'Use ← → (or A / D) to walk. SPACE to jump. Press E at a plaque to read the law.' },
+    { speaker: 'NARRATOR', text: 'Hold SHIFT to sprint. Some of these stretches are longer than others.' },
+    { speaker: 'NARRATOR', text: 'Follow the road to the end. Take your time.' }
+  ];
+
+  const END_DIALOGUE = [
+    { speaker: 'NARRATOR', text: 'You\'ve reached the present.' },
+    { speaker: 'NARRATOR', text: 'The reforms came, but they weren\'t repair. The disparity got smaller, but it didn\'t close.' },
+    { speaker: 'NARRATOR', text: 'The walk ends here. What comes next isn\'t written in pixels — it\'s up to you.' }
+  ];
+
+  // ============================================================
+  // DOM REFERENCES
+  // ============================================================
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d', { alpha: false });
+  ctx.imageSmoothingEnabled = false;
+
+  const hudEl = document.getElementById('hud');
+  const hudYear = document.getElementById('hud-year');
+  const hudSub = document.getElementById('hud-sub');
+  const progressEl = document.getElementById('progress');
+  const promptEl = document.getElementById('prompt');
+  const floaterEl = document.getElementById('floater');
+  const dialogueEl = document.getElementById('dialogue');
+  const dlgSpeaker = document.getElementById('dlg-speaker');
+  const dlgText = document.getElementById('dlg-text');
+  const dlgHint = document.getElementById('dlg-hint');
+  const overlayEl = document.getElementById('overlay');
+  const ovYear = document.getElementById('ov-year');
+  const ovZone = document.getElementById('ov-zone');
+  const ovTitle = document.getElementById('ov-title');
+  const ovBody = document.getElementById('ov-body');
+  const ovClose = document.getElementById('ov-close');
+  const endEl = document.getElementById('end');
+  const startEl = document.getElementById('start');
+  const startBtn = document.getElementById('start-btn');
+  const walkbackBtn = document.getElementById('walkback');
+  const touchEl = document.getElementById('touch');
+
+  // Build progress dots
+  ZONES.forEach((z, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot';
+    d.dataset.idx = i;
+    d.title = z.year;
+    progressEl.appendChild(d);
+  });
+  const progressDots = [...progressEl.querySelectorAll('.dot')];
+
+  // ============================================================
+  // CANVAS SCALING
+  // ============================================================
+  function resize() {
+    const frame = document.getElementById('frame');
+    const fw = frame.clientWidth;
+    const fh = frame.clientHeight;
+    const scale = Math.min(fw / LOGICAL_W, fh / LOGICAL_H);
+    canvas.style.width = `${Math.floor(LOGICAL_W * scale)}px`;
+    canvas.style.height = `${Math.floor(LOGICAL_H * scale)}px`;
+
+    // touch controls visibility (coarse pointer = touch device)
+    const isTouch = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
+    touchEl.style.display = isTouch ? 'flex' : 'none';
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // ============================================================
+  // GAME STATE
+  // ============================================================
+  const state = {
+    phase: 'start',   // 'start' | 'onboarding' | 'play' | 'overlay' | 'end'
+    t: 0,
+    player: {
+      x: 80,
+      y: GROUND_Y - PLAYER_H,
+      vx: 0,
+      vy: 0,
+      facing: 1,
+      onGround: true,
+      walkFrame: 0,
+      walkTimer: 0,
+      sprinting: false
+    },
+    camera: { x: 0, target: 0 },
+    input: { left: false, right: false, jump: false, interact: false, sprint: false },
+    interactEdge: false,   // rising-edge for interact
+    dialogue: {
+      active: false,
+      locking: false,
+      queue: [],
+      currentText: '',
+      charIdx: 0,
+      charTimer: 0,
+      charSpeed: 0.024,     // seconds per character
+      done: false,
+      onComplete: null
+    },
+    plaquesRead: new Set(),
+    floater: { active: false, text: '', timer: 0, worldX: 0, worldY: 0, ttl: 3.2, fadeIn: 0.4 },
+    currentZone: 0,
+    bgStars: []            // tiny ambient particles
+  };
+
+  // Seed ambient dust particles
+  for (let i = 0; i < 40; i++) {
+    state.bgStars.push({
+      x: Math.random() * WORLD_W,
+      y: 60 + Math.random() * 240,
+      s: 0.3 + Math.random() * 0.7,
+      r: Math.random() < 0.5 ? 1 : 2
+    });
+  }
+
+  // ============================================================
+  // INPUT
+  // ============================================================
+  const keyMap = {
+    ArrowLeft: 'left', a: 'left', A: 'left',
+    ArrowRight: 'right', d: 'right', D: 'right',
+    ArrowUp: 'jump', w: 'jump', W: 'jump', ' ': 'jump',
+    e: 'interact', E: 'interact',
+    Shift: 'sprint'
+  };
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (state.phase === 'overlay') closeOverlay();
+      return;
+    }
+    const k = keyMap[e.key];
+    if (!k) return;
+    e.preventDefault();
+    if (!state.input[k]) {
+      if (k === 'interact') state.interactEdge = true;
+      if (state.dialogue.active && (k === 'interact' || k === 'jump')) {
+        advanceDialogue();
+      }
+    }
+    state.input[k] = true;
+  }, { passive: false });
+
+  window.addEventListener('keyup', (e) => {
+    const k = keyMap[e.key];
+    if (!k) return;
+    state.input[k] = false;
+  });
+
+  // Touch buttons
+  function bindTouch(btnId, key, isInteract = false) {
+    const el = document.getElementById(btnId);
+    const down = (e) => {
+      e.preventDefault();
+      if (!state.input[key] && isInteract) state.interactEdge = true;
+      state.input[key] = true;
+      if (state.dialogue.active && (isInteract || key === 'jump')) advanceDialogue();
+    };
+    const up = (e) => { e.preventDefault(); state.input[key] = false; };
+    el.addEventListener('touchstart', down, { passive: false });
+    el.addEventListener('touchend', up, { passive: false });
+    el.addEventListener('touchcancel', up, { passive: false });
+    el.addEventListener('mousedown', down);
+    el.addEventListener('mouseup', up);
+    el.addEventListener('mouseleave', up);
+  }
+  bindTouch('btn-left', 'left');
+  bindTouch('btn-right', 'right');
+  bindTouch('btn-jump', 'jump');
+  bindTouch('btn-int', 'interact', true);
+
+  // Also: tap on dialogue box advances
+  dialogueEl.addEventListener('click', () => {
+    if (state.dialogue.active) advanceDialogue();
+  });
+
+  // ============================================================
+  // DIALOGUE SYSTEM
+  // ============================================================
+  function queueDialogue(lines, locking = false, onComplete = null) {
+    state.dialogue.queue = lines.slice();
+    state.dialogue.locking = locking;
+    state.dialogue.onComplete = onComplete;
+    state.dialogue.active = true;
+    dialogueEl.classList.add('visible');
+    showNextLine();
+  }
+
+  function showNextLine() {
+    const d = state.dialogue;
+    if (d.queue.length === 0) {
+      d.active = false;
+      d.locking = false;
+      dialogueEl.classList.remove('visible');
+      if (d.onComplete) { const cb = d.onComplete; d.onComplete = null; cb(); }
+      return;
+    }
+    const line = d.queue.shift();
+    dlgSpeaker.textContent = line.speaker || 'NARRATOR';
+    d.currentText = line.text;
+    d.charIdx = 0;
+    d.charTimer = 0;
+    d.done = false;
+    dlgText.textContent = '';
+    dlgHint.classList.remove('ready');
+  }
+
+  function advanceDialogue() {
+    const d = state.dialogue;
+    if (!d.active) return;
+    if (!d.done) {
+      // Complete instantly
+      d.charIdx = d.currentText.length;
+      dlgText.textContent = d.currentText;
+      d.done = true;
+      dlgHint.classList.add('ready');
+      return;
+    }
+    showNextLine();
+  }
+
+  function updateDialogue(dt) {
+    const d = state.dialogue;
+    if (!d.active || d.done) return;
+    d.charTimer += dt;
+    while (d.charTimer >= d.charSpeed && d.charIdx < d.currentText.length) {
+      d.charTimer -= d.charSpeed;
+      d.charIdx++;
+    }
+    dlgText.textContent = d.currentText.slice(0, d.charIdx);
+    if (d.charIdx >= d.currentText.length) {
+      d.done = true;
+      dlgHint.classList.add('ready');
+    }
+  }
+
+  // ============================================================
+  // OVERLAY
+  // ============================================================
+  function openOverlay(zoneIdx) {
+    const z = ZONES[zoneIdx];
+    ovYear.textContent = z.year;
+    ovZone.textContent = z.label;
+    ovTitle.textContent = z.law;
+    ovBody.innerHTML = z.overlay.body;
+    overlayEl.classList.add('visible');
+    state.phase = 'overlay';
+    document.getElementById('overlay-card').scrollTop = 0;
+  }
+
+  function closeOverlay() {
+    overlayEl.classList.remove('visible');
+    state.phase = 'play';
+    // Mark plaque as read; show post-read floater
+    const idx = state._pendingPlaque;
+    if (idx != null && !state.plaquesRead.has(idx)) {
+      state.plaquesRead.add(idx);
+      progressDots[idx].classList.add('read');
+      showFloater(ZONES[idx].postLine, idx);
+    }
+    state._pendingPlaque = null;
+  }
+  ovClose.addEventListener('click', closeOverlay);
+  overlayEl.addEventListener('click', (e) => {
+    if (e.target === overlayEl) closeOverlay();
+  });
+
+  // ============================================================
+  // FLOATER (post-read line)
+  // ============================================================
+  function showFloater(text, zoneIdx) {
+    state.floater.active = true;
+    state.floater.text = text;
+    state.floater.timer = 0;
+    state.floater.worldX = ZONES[zoneIdx].plaqueX;
+    state.floater.worldY = GROUND_Y - 120;
+    floaterEl.textContent = text;
+    floaterEl.classList.add('visible');
+  }
+  function hideFloater() {
+    state.floater.active = false;
+    floaterEl.classList.remove('visible');
+  }
+
+  // ============================================================
+  // UTILS
+  // ============================================================
+  const hexToRgb = (hex) => {
+    const h = hex.replace('#', '');
+    return {
+      r: parseInt(h.slice(0, 2), 16),
+      g: parseInt(h.slice(2, 4), 16),
+      b: parseInt(h.slice(4, 6), 16)
+    };
+  };
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const lerpColor = (c1, c2, t) => {
+    const a = hexToRgb(c1), b = hexToRgb(c2);
+    return `rgb(${Math.round(lerp(a.r, b.r, t))},${Math.round(lerp(a.g, b.g, t))},${Math.round(lerp(a.b, b.b, t))})`;
+  };
+
+  function currentZoneIndex(worldX) {
+    const i = Math.floor(worldX / ZONE_W);
+    return Math.max(0, Math.min(ZONES.length - 1, i));
+  }
+
+  // Returns blended palette keys based on player x
+  const TRANSITION = 140; // px over which zones blend
+  function blendedPalette(worldX) {
+    const i = currentZoneIndex(worldX);
+    const z = ZONES[i];
+    const zoneEnd = (i + 1) * ZONE_W;
+    const distToEnd = zoneEnd - worldX;
+    const next = ZONES[i + 1];
+    if (next && distToEnd < TRANSITION) {
+      const t = 1 - (distToEnd / TRANSITION);
+      return {
+        skyTop: lerpColor(z.palette.skyTop, next.palette.skyTop, t),
+        skyBot: lerpColor(z.palette.skyBot, next.palette.skyBot, t),
+        ground: lerpColor(z.palette.ground, next.palette.ground, t),
+        groundHi: lerpColor(z.palette.groundHi, next.palette.groundHi, t)
+      };
+    }
+    return {
+      skyTop: z.palette.skyTop,
+      skyBot: z.palette.skyBot,
+      ground: z.palette.ground,
+      groundHi: z.palette.groundHi
+    };
+  }
+
+  // ============================================================
+  // RENDERING — BACKGROUND
+  // ============================================================
+  function drawSky(pal, worldX) {
+    // Zone 5 (2026) has a horizontal split sky: reform left, enforcement right
+    const playerZone = currentZoneIndex(worldX);
+    const grad = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+    grad.addColorStop(0, pal.skyTop);
+    grad.addColorStop(1, pal.skyBot);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, LOGICAL_W, GROUND_Y);
+
+    // Sun / moon per zone
+    const z = ZONES[playerZone];
+    const sunX = 640 - (state.camera.x * 0.06);
+    if (playerZone === 0) {
+      // warm sun
+      ctx.fillStyle = 'rgba(232,169,74,0.35)';
+      ctx.beginPath(); ctx.arc(sunX, 110, 60, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(232,169,74,0.8)';
+      ctx.beginPath(); ctx.arc(sunX, 110, 28, 0, Math.PI * 2); ctx.fill();
+    } else if (playerZone === 1) {
+      // bureaucratic haze, no sun, just a band
+      ctx.fillStyle = 'rgba(184,194,150,0.15)';
+      ctx.fillRect(0, 120, LOGICAL_W, 30);
+    } else if (playerZone === 2) {
+      // pale cold moon
+      ctx.fillStyle = 'rgba(200,215,235,0.7)';
+      ctx.beginPath(); ctx.arc(sunX, 90, 22, 0, Math.PI * 2); ctx.fill();
+    } else if (playerZone === 3) {
+      // sodium-lamp sky glow
+      ctx.fillStyle = 'rgba(200,160,100,0.10)';
+      ctx.fillRect(0, 0, LOGICAL_W, 200);
+    } else if (playerZone === 4) {
+      // dawn sun, hopeful
+      ctx.fillStyle = 'rgba(156,196,180,0.3)';
+      ctx.beginPath(); ctx.arc(sunX, 130, 50, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(245,235,200,0.9)';
+      ctx.beginPath(); ctx.arc(sunX, 130, 22, 0, Math.PI * 2); ctx.fill();
+    } else if (playerZone === 5) {
+      // split: warm left, cool right
+      const splitX = 400;
+      ctx.fillStyle = 'rgba(232,169,74,0.25)';
+      ctx.beginPath(); ctx.arc(splitX - 130, 115, 42, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(122,156,196,0.35)';
+      ctx.fillRect(splitX, 0, LOGICAL_W - splitX, 200);
+      // surveillance blinker
+      const blink = (Math.sin(state.t * 4) + 1) * 0.5;
+      ctx.fillStyle = `rgba(230,90,70,${0.4 + blink * 0.5})`;
+      ctx.fillRect(680, 70, 3, 3);
+    }
+
+    // Ambient dust/stars near tops for night zones
+    if (playerZone >= 2 && playerZone <= 3) {
+      ctx.fillStyle = 'rgba(239,231,213,0.5)';
+      for (const s of state.bgStars) {
+        const sx = s.x - state.camera.x * 0.15;
+        const wrapped = ((sx % LOGICAL_W) + LOGICAL_W) % LOGICAL_W;
+        if (s.y < 220) ctx.fillRect(wrapped, s.y, s.r, s.r);
+      }
+    }
+  }
+
+  // Pixel rect helper (integer snapping)
+  function px(x, y, w, h, color) {
+    ctx.fillStyle = color;
+    ctx.fillRect(Math.floor(x), Math.floor(y), Math.ceil(w), Math.ceil(h));
+  }
+
+  // Parallax helper — given worldX of an element and parallax factor,
+  // returns canvas x.
+  function pxx(worldX, factor) {
+    return Math.floor(worldX - state.camera.x * factor);
+  }
+
+  // ===== Per-zone background silhouette drawers =====
+  // All draw into a horizontal band from y ~ 160 to GROUND_Y.
+  // cx: base canvas x for this zone (pxx(zone.startX, factor))
+  // w: drawable width (one zone's worth)
+  function drawFarLayer(zoneIdx, cx, w, pal) {
+    switch (zoneIdx) {
+      case 0: drawTenementsFar(cx, w, pal); break;
+      case 1: drawGovtFar(cx, w, pal); break;
+      case 2: drawCourthouseFar(cx, w, pal); break;
+      case 3: drawPrisonFar(cx, w, pal); break;
+      case 4: drawReformFar(cx, w, pal); break;
+      case 5: drawSplitFar(cx, w, pal); break;
+    }
+  }
+
+  function drawNearLayer(zoneIdx, cx, w, pal) {
+    switch (zoneIdx) {
+      case 0: drawTenementsNear(cx, w, pal); break;
+      case 1: drawGovtNear(cx, w, pal); break;
+      case 2: drawCourthouseNear(cx, w, pal); break;
+      case 3: drawPrisonNear(cx, w, pal); break;
+      case 4: drawReformNear(cx, w, pal); break;
+      case 5: drawSplitNear(cx, w, pal); break;
+    }
+  }
+
+  // ---------- Zone 0: Tenements / Jazz ----------
+  function drawTenementsFar(cx, w, pal) {
+    // Row of tenement buildings
+    const buildings = [
+      { x: 40, w: 80, h: 170 },
+      { x: 130, w: 60, h: 130 },
+      { x: 200, w: 90, h: 200 },
+      { x: 300, w: 70, h: 150 },
+      { x: 380, w: 110, h: 220 },
+      { x: 500, w: 60, h: 140 },
+      { x: 570, w: 95, h: 180 },
+      { x: 675, w: 70, h: 160 }
+    ];
+    for (const b of buildings) {
+      const bx = cx + b.x;
+      const by = GROUND_Y - b.h;
+      px(bx, by, b.w, b.h, pal.far);
+      // windows
+      for (let wy = by + 10; wy < GROUND_Y - 10; wy += 12) {
+        for (let wx = bx + 6; wx < bx + b.w - 6; wx += 10) {
+          if ((wx + wy) % 23 < 14) {
+            px(wx, wy, 3, 4, 'rgba(232,169,74,0.35)');
+          } else {
+            px(wx, wy, 3, 4, 'rgba(20,12,8,0.6)');
+          }
+        }
+      }
+      // rooftop water tower on tall ones
+      if (b.h > 180) {
+        px(bx + b.w * 0.5 - 6, by - 12, 12, 12, pal.far);
+        px(bx + b.w * 0.5 - 8, by - 14, 16, 3, pal.far);
+      }
+    }
+  }
+
+  function drawTenementsNear(cx, w, pal) {
+    // Marquee / lamp posts in the near layer
+    const lamps = [120, 380, 640];
+    for (const lx of lamps) {
+      const x = cx + lx;
+      px(x, GROUND_Y - 60, 2, 60, pal.near);
+      px(x - 5, GROUND_Y - 64, 12, 4, pal.near);
+      px(x - 4, GROUND_Y - 60, 10, 6, 'rgba(232,169,74,0.6)');
+      // glow
+      const grd = ctx.createRadialGradient(x + 1, GROUND_Y - 58, 2, x + 1, GROUND_Y - 58, 30);
+      grd.addColorStop(0, 'rgba(232,169,74,0.4)');
+      grd.addColorStop(1, 'rgba(232,169,74,0)');
+      ctx.fillStyle = grd;
+      ctx.fillRect(x - 30, GROUND_Y - 90, 60, 60);
+    }
+    // Jazz club marquee
+    const mx = cx + 240;
+    px(mx, GROUND_Y - 70, 90, 20, pal.near);
+    px(mx + 2, GROUND_Y - 68, 86, 16, pal.far);
+    // pulsing lights
+    for (let i = 0; i < 6; i++) {
+      const on = (Math.sin(state.t * 3 + i * 0.7) + 1) * 0.5 > 0.4;
+      px(mx + 6 + i * 14, GROUND_Y - 62, 3, 3, on ? pal.accent : 'rgba(50,30,20,0.8)');
+    }
+  }
+
+  // ---------- Zone 1: Government District ----------
+  function drawGovtFar(cx, w, pal) {
+    // Wide gov building
+    const baseX = cx + 80;
+    const baseY = GROUND_Y - 180;
+    px(baseX, baseY, 640, 180, pal.far);
+    // Dome
+    const domeX = baseX + 320;
+    const domeY = baseY - 60;
+    ctx.fillStyle = pal.far;
+    ctx.beginPath();
+    ctx.arc(domeX, domeY + 40, 55, Math.PI, 0);
+    ctx.fill();
+    px(domeX - 3, domeY - 20, 6, 22, pal.far); // spire
+    // Steps
+    for (let i = 0; i < 5; i++) {
+      px(baseX - i * 4, GROUND_Y - 4 - i * 3, 640 + i * 8, 3, pal.near);
+    }
+    // Columns
+    for (let i = 0; i < 14; i++) {
+      const cxPx = baseX + 40 + i * 42;
+      px(cxPx, baseY + 30, 8, 130, pal.near);
+      px(cxPx - 2, baseY + 26, 12, 4, pal.near);
+      px(cxPx - 2, baseY + 158, 12, 4, pal.near);
+    }
+    // Dark windows
+    for (let i = 0; i < 10; i++) {
+      px(baseX + 30 + i * 60, baseY + 40, 6, 10, 'rgba(10,14,10,0.8)');
+    }
+  }
+
+  function drawGovtNear(cx, w, pal) {
+    // Flags / filing cabinet silhouettes
+    const fx = cx + 180;
+    // Flagpole
+    px(fx, GROUND_Y - 90, 2, 90, pal.near);
+    const flagOff = Math.sin(state.t * 2) * 2;
+    px(fx + 2, GROUND_Y - 88, 22 + flagOff, 14, '#7c4030');
+    // Filing cabinets at ground
+    for (let i = 0; i < 4; i++) {
+      const bx = cx + 440 + i * 34;
+      px(bx, GROUND_Y - 24, 30, 24, pal.near);
+      px(bx + 4, GROUND_Y - 18, 22, 2, pal.far);
+      px(bx + 4, GROUND_Y - 12, 22, 2, pal.far);
+      px(bx + 4, GROUND_Y - 6, 22, 2, pal.far);
+    }
+  }
+
+  // ---------- Zone 2: Federal Courthouse ----------
+  function drawCourthouseFar(cx, w, pal) {
+    const baseX = cx + 140;
+    const baseY = GROUND_Y - 200;
+    // Rectangular base
+    px(baseX, baseY + 40, 520, 160, pal.far);
+    // Pediment
+    ctx.fillStyle = pal.far;
+    ctx.beginPath();
+    ctx.moveTo(baseX, baseY + 40);
+    ctx.lineTo(baseX + 260, baseY);
+    ctx.lineTo(baseX + 520, baseY + 40);
+    ctx.closePath();
+    ctx.fill();
+    // Columns
+    for (let i = 0; i < 8; i++) {
+      const cxPx = baseX + 40 + i * 60;
+      px(cxPx, baseY + 50, 10, 140, pal.near);
+      px(cxPx - 3, baseY + 46, 16, 6, pal.near);
+      px(cxPx - 3, baseY + 184, 16, 6, pal.near);
+    }
+    // Engraved text shadow
+    px(baseX + 180, baseY + 14, 160, 3, 'rgba(10,14,20,0.6)');
+    // Steps
+    for (let i = 0; i < 6; i++) {
+      px(baseX - i * 5, GROUND_Y - 4 - i * 3, 520 + i * 10, 3, pal.near);
+    }
+  }
+
+  function drawCourthouseNear(cx, w, pal) {
+    // Scales of justice silhouette
+    const sx = cx + 740;
+    px(sx, GROUND_Y - 60, 2, 60, pal.near);
+    px(sx - 20, GROUND_Y - 62, 42, 2, pal.near);
+    // pans
+    px(sx - 26, GROUND_Y - 56, 14, 3, pal.near);
+    px(sx + 14, GROUND_Y - 56, 14, 3, pal.near);
+    // Blind justice stance — tiny figure
+    px(sx + 60, GROUND_Y - 36, 8, 36, pal.near);
+    px(sx + 58, GROUND_Y - 44, 12, 10, pal.near);
+    // Barriers
+    for (let i = 0; i < 5; i++) {
+      px(cx + 40 + i * 30, GROUND_Y - 18, 16, 18, pal.near);
+      px(cx + 44 + i * 30, GROUND_Y - 22, 8, 4, pal.near);
+    }
+  }
+
+  // ---------- Zone 3: Prison Expansion ----------
+  function drawPrisonFar(cx, w, pal) {
+    // Grim wall
+    px(cx + 20, GROUND_Y - 210, 860, 210, pal.far);
+    // Guard towers
+    const towers = [120, 440, 780];
+    for (const tx of towers) {
+      const x = cx + tx;
+      px(x, GROUND_Y - 260, 36, 260, pal.far);
+      px(x - 4, GROUND_Y - 270, 44, 12, pal.near);
+      px(x + 4, GROUND_Y - 258, 28, 18, 'rgba(200,160,100,0.5)');
+      // roof
+      ctx.fillStyle = pal.near;
+      ctx.beginPath();
+      ctx.moveTo(x - 6, GROUND_Y - 270);
+      ctx.lineTo(x + 18, GROUND_Y - 284);
+      ctx.lineTo(x + 42, GROUND_Y - 270);
+      ctx.closePath();
+      ctx.fill();
+      // spotlight sweep
+      const angle = Math.sin(state.t * 0.6 + tx * 0.01) * 0.4;
+      ctx.save();
+      ctx.translate(x + 18, GROUND_Y - 250);
+      ctx.rotate(Math.PI / 2 + angle);
+      const grd = ctx.createLinearGradient(0, 0, 0, 160);
+      grd.addColorStop(0, 'rgba(230,210,170,0.35)');
+      grd.addColorStop(1, 'rgba(230,210,170,0)');
+      ctx.fillStyle = grd;
+      ctx.beginPath();
+      ctx.moveTo(-3, 0);
+      ctx.lineTo(3, 0);
+      ctx.lineTo(30, 160);
+      ctx.lineTo(-30, 160);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+    // barbed wire
+    for (let i = 0; i < 30; i++) {
+      const bx = cx + 20 + i * 30;
+      px(bx, GROUND_Y - 212, 2, 8, pal.near);
+      px(bx - 3, GROUND_Y - 216, 8, 2, pal.near);
+    }
+    // bars in wall windows
+    for (let i = 0; i < 14; i++) {
+      const wx = cx + 80 + i * 56;
+      px(wx, GROUND_Y - 140, 22, 30, 'rgba(20,20,24,0.9)');
+      for (let j = 0; j < 4; j++) px(wx + 2 + j * 5, GROUND_Y - 140, 1, 30, pal.near);
+    }
+  }
+
+  function drawPrisonNear(cx, w, pal) {
+    // Chain-link fence
+    ctx.strokeStyle = 'rgba(180,180,190,0.5)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 40; i++) {
+      const x = cx + i * 22;
+      ctx.beginPath();
+      ctx.moveTo(x, GROUND_Y - 40);
+      ctx.lineTo(x + 11, GROUND_Y - 10);
+      ctx.moveTo(x + 11, GROUND_Y - 40);
+      ctx.lineTo(x, GROUND_Y - 10);
+      ctx.stroke();
+    }
+    px(cx, GROUND_Y - 42, w, 2, pal.near);
+    px(cx, GROUND_Y - 10, w, 2, pal.near);
+  }
+
+  // ---------- Zone 4: Reform Courtroom ----------
+  function drawReformFar(cx, w, pal) {
+    // Lighter courthouse with open door
+    const baseX = cx + 160;
+    const baseY = GROUND_Y - 190;
+    px(baseX, baseY + 30, 480, 160, pal.far);
+    // Pediment
+    ctx.fillStyle = pal.far;
+    ctx.beginPath();
+    ctx.moveTo(baseX, baseY + 30);
+    ctx.lineTo(baseX + 240, baseY);
+    ctx.lineTo(baseX + 480, baseY + 30);
+    ctx.closePath();
+    ctx.fill();
+    // Open doorway with light
+    const doorX = baseX + 220;
+    const doorY = baseY + 80;
+    px(doorX, doorY, 40, 110, '#1a2220');
+    // glowing light
+    const grd = ctx.createLinearGradient(doorX, doorY, doorX, doorY + 110);
+    grd.addColorStop(0, 'rgba(245,235,200,0.85)');
+    grd.addColorStop(1, 'rgba(156,196,180,0.15)');
+    ctx.fillStyle = grd;
+    ctx.fillRect(doorX + 4, doorY + 6, 32, 104);
+    // Light beams outward
+    ctx.fillStyle = 'rgba(245,235,200,0.12)';
+    ctx.beginPath();
+    ctx.moveTo(doorX + 20, doorY + 55);
+    ctx.lineTo(doorX - 200, doorY + 200);
+    ctx.lineTo(doorX + 240, doorY + 200);
+    ctx.closePath();
+    ctx.fill();
+    // Columns
+    for (let i = 0; i < 6; i++) {
+      const cxPx = baseX + 40 + i * 80;
+      if (i === 2 || i === 3) continue; // gap for door
+      px(cxPx, baseY + 40, 10, 140, pal.near);
+    }
+    // Steps
+    for (let i = 0; i < 5; i++) {
+      px(baseX - i * 5, GROUND_Y - 4 - i * 3, 480 + i * 10, 3, pal.near);
+    }
+  }
+
+  function drawReformNear(cx, w, pal) {
+    // Bench silhouettes — empty, suggesting both progress and absence
+    for (let i = 0; i < 3; i++) {
+      const bx = cx + 60 + i * 180;
+      px(bx, GROUND_Y - 20, 60, 6, pal.near);
+      px(bx + 4, GROUND_Y - 14, 4, 14, pal.near);
+      px(bx + 52, GROUND_Y - 14, 4, 14, pal.near);
+    }
+    // Small growing plant
+    const plx = cx + 800;
+    px(plx, GROUND_Y - 12, 2, 12, '#3a5a3a');
+    px(plx - 4, GROUND_Y - 14, 4, 3, '#9cc496');
+    px(plx + 2, GROUND_Y - 18, 4, 3, '#9cc496');
+  }
+
+  // ---------- Zone 5: Split Horizon ----------
+  function drawSplitFar(cx, w, pal) {
+    // LEFT HALF — dispensary / reform
+    // Warm brick building
+    const leftX = cx + 60;
+    px(leftX, GROUND_Y - 180, 340, 180, '#3a2418');
+    // windows with plants
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 5; col++) {
+        const wx = leftX + 30 + col * 60;
+        const wy = GROUND_Y - 160 + row * 48;
+        px(wx, wy, 34, 30, 'rgba(232,169,74,0.35)');
+        // plant
+        px(wx + 15, wy + 18, 2, 12, '#2a4a2a');
+        px(wx + 11, wy + 16, 4, 3, '#7cb89a');
+        px(wx + 17, wy + 14, 4, 3, '#7cb89a');
+      }
+    }
+    // Dispensary sign
+    px(leftX + 100, GROUND_Y - 200, 140, 22, '#4a2a1a');
+    // leaf symbol
+    ctx.fillStyle = '#7cb89a';
+    ctx.beginPath();
+    ctx.ellipse(leftX + 170, GROUND_Y - 189, 6, 10, Math.PI / 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // RIGHT HALF — surveillance / enforcement
+    const rightX = cx + 460;
+    // Cold concrete tower
+    px(rightX, GROUND_Y - 280, 80, 280, '#1a1e2a');
+    // antenna
+    px(rightX + 40, GROUND_Y - 320, 2, 40, '#1a1e2a');
+    px(rightX + 36, GROUND_Y - 324, 10, 2, '#1a1e2a');
+    // cameras
+    for (let i = 0; i < 3; i++) {
+      const camY = GROUND_Y - 240 + i * 60;
+      px(rightX - 4, camY, 8, 6, '#2a2e3a');
+      px(rightX - 8, camY + 1, 4, 4, '#1a1e2a');
+      // blinker
+      const b = (Math.sin(state.t * 3 + i) + 1) * 0.5;
+      px(rightX - 6, camY + 2, 2, 2, `rgba(230,90,70,${0.4 + b * 0.6})`);
+    }
+    // Surveillance building behind
+    px(rightX + 90, GROUND_Y - 160, 200, 160, '#14181e');
+    for (let i = 0; i < 6; i++) {
+      px(rightX + 100 + i * 30, GROUND_Y - 140, 16, 10, 'rgba(122,156,196,0.4)');
+      px(rightX + 100 + i * 30, GROUND_Y - 100, 16, 10, 'rgba(122,156,196,0.3)');
+      px(rightX + 100 + i * 30, GROUND_Y - 60, 16, 10, 'rgba(122,156,196,0.4)');
+    }
+    // Divider line — subtle vertical gradient
+    const dx = cx + 420;
+    const dg = ctx.createLinearGradient(dx, 0, dx + 20, 0);
+    dg.addColorStop(0, 'rgba(0,0,0,0)');
+    dg.addColorStop(0.5, 'rgba(0,0,0,0.6)');
+    dg.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = dg;
+    ctx.fillRect(dx, 100, 20, GROUND_Y - 100);
+  }
+
+  function drawSplitNear(cx, w, pal) {
+    // Left: small plants / community
+    px(cx + 40, GROUND_Y - 14, 3, 14, '#3a5a3a');
+    px(cx + 36, GROUND_Y - 16, 4, 3, '#7cb89a');
+    px(cx + 42, GROUND_Y - 20, 5, 3, '#7cb89a');
+    px(cx + 140, GROUND_Y - 12, 3, 12, '#3a5a3a');
+    px(cx + 136, GROUND_Y - 14, 5, 3, '#7cb89a');
+
+    // Right: concrete barriers
+    for (let i = 0; i < 4; i++) {
+      const bx = cx + 500 + i * 60;
+      px(bx, GROUND_Y - 14, 40, 14, '#2a2e38');
+      px(bx + 2, GROUND_Y - 16, 36, 2, '#3a3e48');
+    }
+    // razor wire
+    ctx.strokeStyle = 'rgba(180,180,200,0.6)';
+    ctx.beginPath();
+    ctx.moveTo(cx + 460, GROUND_Y - 20);
+    for (let i = 0; i < 30; i++) {
+      const x = cx + 460 + i * 10;
+      ctx.lineTo(x + 3, GROUND_Y - 24);
+      ctx.lineTo(x + 6, GROUND_Y - 20);
+    }
+    ctx.stroke();
+  }
+
+  // ============================================================
+  // END-OF-ROAD MARKER (visible destination)
+  // ============================================================
+  function drawEndMarker() {
+    const worldX = END_TRIGGER_X;
+    const cx = Math.floor(worldX - state.camera.x);
+    if (cx < -120 || cx > LOGICAL_W + 120) return;
+
+    const pulse = (Math.sin(state.t * 2) + 1) * 0.5;       // 0..1
+    const fastPulse = (Math.sin(state.t * 4) + 1) * 0.5;
+
+    // Vertical light beam from top of screen down to plant
+    const beamW = 28;
+    const beamLeft = cx - beamW / 2;
+    const beamGrad = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+    beamGrad.addColorStop(0, 'rgba(245,235,200,0)');
+    beamGrad.addColorStop(0.25, `rgba(245,235,200,${0.18 + pulse * 0.10})`);
+    beamGrad.addColorStop(0.85, `rgba(232,169,74,${0.32 + pulse * 0.18})`);
+    beamGrad.addColorStop(1, `rgba(124,184,154,${0.42 + pulse * 0.22})`);
+    ctx.fillStyle = beamGrad;
+    ctx.fillRect(beamLeft, 0, beamW, GROUND_Y);
+
+    // Wider soft halo around beam
+    const haloGrad = ctx.createLinearGradient(beamLeft - 30, 0, beamLeft + beamW + 30, 0);
+    haloGrad.addColorStop(0, 'rgba(245,235,200,0)');
+    haloGrad.addColorStop(0.5, `rgba(245,235,200,${0.10 + pulse * 0.06})`);
+    haloGrad.addColorStop(1, 'rgba(245,235,200,0)');
+    ctx.fillStyle = haloGrad;
+    ctx.fillRect(beamLeft - 30, 60, beamW + 60, GROUND_Y - 60);
+
+    // Drifting motes inside the beam
+    for (let i = 0; i < 8; i++) {
+      const seed = i * 0.7;
+      const mx = cx - 8 + ((Math.sin(state.t * 0.6 + seed) + 1) * 0.5) * 16;
+      const cycleT = ((state.t * 0.35 + seed) % 1);
+      const my = 80 + cycleT * (GROUND_Y - 90);
+      const a = (1 - cycleT) * 0.7;
+      ctx.fillStyle = `rgba(245,235,200,${a})`;
+      ctx.fillRect(Math.floor(mx), Math.floor(my), 2, 2);
+    }
+
+    // Ground glow puddle
+    const puddleGrad = ctx.createRadialGradient(cx, GROUND_Y, 4, cx, GROUND_Y, 70);
+    puddleGrad.addColorStop(0, `rgba(245,235,200,${0.55 + pulse * 0.2})`);
+    puddleGrad.addColorStop(0.4, `rgba(232,169,74,${0.30 + pulse * 0.15})`);
+    puddleGrad.addColorStop(1, 'rgba(232,169,74,0)');
+    ctx.fillStyle = puddleGrad;
+    ctx.fillRect(cx - 70, GROUND_Y - 30, 140, 60);
+
+    // Small raised planter / soil mound
+    px(cx - 14, GROUND_Y - 4, 28, 4, '#3a2418');
+    px(cx - 12, GROUND_Y - 6, 24, 2, '#5a3a22');
+    // soil dots
+    px(cx - 8, GROUND_Y - 6, 2, 2, '#241410');
+    px(cx + 4, GROUND_Y - 5, 2, 2, '#241410');
+
+    // The plant — taller, more deliberate cannabis-inspired sprout
+    const stemX = cx - 1;
+    const stemBase = GROUND_Y - 6;
+    const stemTop = GROUND_Y - 38;
+    px(stemX, stemTop, 2, stemBase - stemTop, '#3a6a3a');
+    // node highlights
+    px(stemX, stemTop + 8, 2, 1, '#5a8a5a');
+    px(stemX, stemTop + 18, 2, 1, '#5a8a5a');
+
+    // Leaves (5-finger silhouettes, low + mid + crown)
+    function leaf(lx, ly, dir, scale) {
+      const c = '#7cb89a';
+      const cd = '#5a9a78';
+      // central blade
+      px(lx, ly, 2, 1, c);
+      px(lx + dir, ly - 1, 2, 1, c);
+      px(lx + dir * 2, ly - 2, 2, 1, c);
+      px(lx + dir * 3, ly - 3, 2, 1, c);
+      // side fingers
+      px(lx + dir, ly + 1, 2, 1, cd);
+      px(lx + dir * 2, ly + 1, 1, 1, cd);
+      // top finger
+      px(lx + dir * 2, ly - 4, 1, 1, c);
+      if (scale > 1) {
+        px(lx + dir * 4, ly - 3, 1, 1, c);
+      }
+    }
+    // Lower leaves
+    leaf(stemX - 1, GROUND_Y - 16, -1, 1);
+    leaf(stemX + 2, GROUND_Y - 18, 1, 1);
+    // Mid leaves
+    leaf(stemX - 1, GROUND_Y - 26, -1, 1.2);
+    leaf(stemX + 2, GROUND_Y - 28, 1, 1.2);
+    // Crown bud
+    const budCol = `rgba(180,210,160,${0.85 + fastPulse * 0.15})`;
+    px(stemX - 1, stemTop - 4, 4, 4, budCol);
+    px(stemX, stemTop - 6, 2, 2, '#c8e8b4');
+
+    // Pulsing accent ring on the ground
+    ctx.strokeStyle = `rgba(232,169,74,${0.35 + pulse * 0.35})`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.ellipse(cx, GROUND_Y + 1, 22 + pulse * 6, 4 + pulse * 1.5, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Distance hint: only show "→ THE END" floating sign once player has read at least 1 plaque
+    // and is within visual range but not yet at the marker
+    const playerWorldX = state.player.x + PLAYER_W / 2;
+    const distToEnd = worldX - playerWorldX;
+    if (state.plaquesRead.size >= 1 && distToEnd > 40 && distToEnd < 1200) {
+      const fadeIn = Math.min(1, (1200 - distToEnd) / 400);
+      const signY = GROUND_Y - 78 - Math.sin(state.t * 1.5) * 2;
+      ctx.save();
+      ctx.globalAlpha = fadeIn * (0.7 + fastPulse * 0.3);
+      // sign post
+      px(cx - 1, GROUND_Y - 60, 2, 22, '#3a2418');
+      // sign board
+      const sw = 64, sh = 16;
+      const sx = cx - sw / 2;
+      const sy = signY - sh;
+      px(sx, sy, sw, sh, '#1a1410');
+      px(sx + 1, sy + 1, sw - 2, 1, '#e8a94a');
+      px(sx + 1, sy + sh - 2, sw - 2, 1, '#e8a94a');
+      px(sx, sy, 1, sh, '#e8a94a');
+      px(sx + sw - 1, sy, 1, sh, '#e8a94a');
+      ctx.fillStyle = '#e8a94a';
+      ctx.font = 'bold 7px "Press Start 2P", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('THE END', cx, sy + sh / 2);
+      // Arrow under sign pointing down to plant
+      ctx.fillStyle = '#e8a94a';
+      ctx.beginPath();
+      ctx.moveTo(cx - 4, sy + sh + 2);
+      ctx.lineTo(cx + 4, sy + sh + 2);
+      ctx.lineTo(cx, sy + sh + 8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  // ============================================================
+  // GROUND
+  // ============================================================
+  function drawGround() {
+    // Draw ground per-zone (colored strip)
+    for (let i = 0; i < ZONES.length; i++) {
+      const z = ZONES[i];
+      const zStart = i * ZONE_W;
+      const zEnd = zStart + ZONE_W;
+      const sx = zStart - state.camera.x;
+      const ex = zEnd - state.camera.x;
+      if (ex < 0 || sx > LOGICAL_W) continue;
+      const drawX = Math.max(sx, 0);
+      const drawW = Math.min(ex, LOGICAL_W) - drawX;
+      px(drawX, GROUND_Y, drawW, LOGICAL_H - GROUND_Y, z.palette.ground);
+      // highlight line
+      px(drawX, GROUND_Y, drawW, 2, z.palette.groundHi);
+      // texture dashes
+      for (let tx = Math.floor(zStart / 12) * 12; tx < zEnd; tx += 12) {
+        const dx = tx - state.camera.x;
+        if (dx < -4 || dx > LOGICAL_W + 4) continue;
+        if (dx >= drawX && dx <= drawX + drawW) {
+          px(dx, GROUND_Y + 8, 4, 1, z.palette.groundHi);
+          px(dx + 6, GROUND_Y + 20, 3, 1, z.palette.groundHi);
+        }
+      }
+    }
+    // Zone dividers — subtle vertical markers
+    for (let i = 1; i < ZONES.length; i++) {
+      const sx = i * ZONE_W - state.camera.x;
+      if (sx < -4 || sx > LOGICAL_W + 4) continue;
+      px(sx, GROUND_Y, 1, LOGICAL_H - GROUND_Y, 'rgba(0,0,0,0.35)');
+    }
+  }
+
+  // ============================================================
+  // PLAQUES
+  // ============================================================
+  function drawPlaques() {
+    for (let i = 0; i < ZONES.length; i++) {
+      const z = ZONES[i];
+      const worldX = i * ZONE_W + z.plaqueX;
+      const canvasX = worldX - state.camera.x;
+      if (canvasX < -80 || canvasX > LOGICAL_W + 80) continue;
+      const pw = 36, ph = 52;
+      const pxLeft = Math.floor(canvasX - pw / 2);
+      const pyTop = GROUND_Y - ph;
+
+      // Proximity glow
+      const playerWorldX = state.player.x + PLAYER_W / 2;
+      const dist = Math.abs(playerWorldX - worldX);
+      if (dist < INTERACT_RADIUS + 30) {
+        const glow = 1 - (dist / (INTERACT_RADIUS + 30));
+        const pulse = (Math.sin(state.t * 4) + 1) * 0.5;
+        const grd = ctx.createRadialGradient(
+          pxLeft + pw / 2, pyTop + ph / 2, 4,
+          pxLeft + pw / 2, pyTop + ph / 2, 60
+        );
+        grd.addColorStop(0, `rgba(232,169,74,${0.5 * glow * (0.6 + 0.4 * pulse)})`);
+        grd.addColorStop(1, 'rgba(232,169,74,0)');
+        ctx.fillStyle = grd;
+        ctx.fillRect(pxLeft - 30, pyTop - 20, pw + 60, ph + 40);
+      }
+
+      // Base (buried in ground)
+      px(pxLeft - 2, GROUND_Y - 4, pw + 4, 6, '#1a1410');
+
+      // Stone plaque body
+      const isRead = state.plaquesRead.has(i);
+      const bodyCol = isRead ? '#6a6258' : '#4a4238';
+      const edgeHi = isRead ? '#8a8278' : '#6a5e4e';
+      const edgeLo = '#241e18';
+      px(pxLeft, pyTop, pw, ph, bodyCol);
+      // bevels
+      px(pxLeft, pyTop, pw, 2, edgeHi);
+      px(pxLeft, pyTop, 2, ph, edgeHi);
+      px(pxLeft, pyTop + ph - 2, pw, 2, edgeLo);
+      px(pxLeft + pw - 2, pyTop, 2, ph, edgeLo);
+
+      // Engraved year text
+      ctx.save();
+      ctx.fillStyle = isRead ? '#efe7d5' : '#1a1410';
+      ctx.font = 'bold 8px "Press Start 2P", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const yearShort = z.year.split(' ')[0]; // "2010" for "2010 – 2018"
+      ctx.fillText(yearShort, pxLeft + pw / 2, pyTop + 16);
+      ctx.font = 'bold 6px "Press Start 2P", monospace';
+      ctx.fillText('LAW', pxLeft + pw / 2, pyTop + 30);
+      // checkmark if read
+      if (isRead) {
+        ctx.fillStyle = '#7cb89a';
+        ctx.fillText('✓', pxLeft + pw / 2, pyTop + 44);
+      } else {
+        ctx.fillStyle = '#2a2018';
+        ctx.fillText('#' + (i + 1), pxLeft + pw / 2, pyTop + 44);
+      }
+      ctx.restore();
+
+      // Small post in ground
+      px(pxLeft + pw / 2 - 1, GROUND_Y, 2, 6, '#241e18');
+    }
+  }
+
+  // ============================================================
+  // PLAYER (procedural pixel art)
+  // ============================================================
+  function drawPlayer() {
+    const p = state.player;
+    const cx = Math.floor(p.x - state.camera.x);
+    const cy = Math.floor(p.y);
+    const f = p.facing;
+
+    // Shadow
+    const groundDist = GROUND_Y - (p.y + PLAYER_H);
+    const shadowScale = Math.max(0.3, 1 - groundDist / 200);
+    ctx.fillStyle = `rgba(0,0,0,${0.35 * shadowScale})`;
+    ctx.beginPath();
+    ctx.ellipse(cx + PLAYER_W / 2, GROUND_Y + 1, (PLAYER_W / 2 + 2) * shadowScale, 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Sprint dust trail (behind player on ground)
+    if (p.sprinting && p.onGround) {
+      for (let i = 0; i < 3; i++) {
+        const seed = (state.t * 12 + i * 1.7);
+        const phase = (seed % 1);
+        const dustX = cx + PLAYER_W / 2 - f * (8 + phase * 14 + i * 3);
+        const dustY = GROUND_Y - 1 - phase * 6 - i;
+        const a = (1 - phase) * 0.55;
+        ctx.fillStyle = `rgba(220,200,170,${a})`;
+        ctx.fillRect(Math.floor(dustX), Math.floor(dustY), 2, 2);
+        if (phase < 0.5) {
+          ctx.fillRect(Math.floor(dustX) - 2, Math.floor(dustY) + 1, 1, 1);
+        }
+      }
+    }
+
+    // Body (simple pixel character)
+    // Head
+    const skin = '#d7a778';
+    const hair = '#2a1810';
+    const coat = '#3a2a20';
+    const coatDark = '#261810';
+    const pant = '#1a1410';
+    const boots = '#0a0806';
+
+    // 18 wide, 30 tall character
+    // y offsets from cy (top)
+    px(cx + 5, cy, 8, 7, hair);              // hair
+    px(cx + 5, cy + 5, 8, 6, skin);          // face
+    px(cx + 6, cy + 7, 2, 1, '#1a0a08');     // eye L
+    px(cx + 10, cy + 7, 2, 1, '#1a0a08');    // eye R
+    // coat
+    px(cx + 3, cy + 11, 12, 11, coat);
+    px(cx + 3, cy + 11, 12, 1, coatDark);
+    px(cx + 3, cy + 14, 12, 1, coatDark);
+    // collar
+    px(cx + 7, cy + 11, 4, 2, skin);
+
+    // Legs — walking animation
+    const walking = !p.onGround ? false : Math.abs(p.vx) > 10;
+    let legOff1 = 0, legOff2 = 0;
+    if (walking) {
+      const phase = Math.floor(p.walkFrame) % 4;
+      if (phase === 0) { legOff1 = 0; legOff2 = 2; }
+      else if (phase === 1) { legOff1 = 1; legOff2 = 1; }
+      else if (phase === 2) { legOff1 = 2; legOff2 = 0; }
+      else { legOff1 = 1; legOff2 = 1; }
+    } else if (!p.onGround) {
+      legOff1 = 1; legOff2 = -1;
+    }
+
+    // Left leg
+    px(cx + 4, cy + 22, 4, 6 - legOff1, pant);
+    px(cx + 4, cy + 28 - legOff1, 4, 2, boots);
+    // Right leg
+    px(cx + 10, cy + 22, 4, 6 - legOff2, pant);
+    px(cx + 10, cy + 28 - legOff2, 4, 2, boots);
+
+    // Arm swing
+    let armOff = 0;
+    if (walking) {
+      const phase = Math.floor(p.walkFrame) % 4;
+      armOff = phase === 0 ? -2 : phase === 2 ? 2 : 0;
+    }
+    // Back arm
+    px(cx + (f === 1 ? 1 : 14), cy + 12 + (armOff < 0 ? 1 : 0), 3, 9, coatDark);
+    // Front arm (slightly in front of coat)
+    px(cx + (f === 1 ? 14 : 1), cy + 12 - (armOff > 0 ? 1 : 0), 3, 9, coat);
+
+    // Facing dot on face (subtle)
+    if (f === -1) {
+      // flip eyes — redraw face area mirrored
+      px(cx + 5, cy + 5, 8, 6, skin);
+      px(cx + 6, cy + 7, 2, 1, '#1a0a08');
+      px(cx + 10, cy + 7, 2, 1, '#1a0a08');
+      // overwrite hair edge hint
+    }
+  }
+
+  // ============================================================
+  // UI PROXIMITY BUBBLE + FLOATER POSITIONING
+  // ============================================================
+  function updateUI(worldX, worldY) {
+    // Position of the player in screen-space (for prompt/floater DOM overlay)
+    const frame = document.getElementById('frame');
+    const frameW = frame.clientWidth;
+    const frameH = frame.clientHeight;
+    const scale = Math.min(frameW / LOGICAL_W, frameH / LOGICAL_H);
+    const canvasOffsetX = (frameW - LOGICAL_W * scale) / 2;
+    const canvasOffsetY = (frameH - LOGICAL_H * scale) / 2;
+
+    // Prompt bubble — above player head if near a plaque
+    let nearestPlaqueIdx = -1;
+    let nearestDist = Infinity;
+    const playerWorldX = state.player.x + PLAYER_W / 2;
+    for (let i = 0; i < ZONES.length; i++) {
+      const pwx = i * ZONE_W + ZONES[i].plaqueX;
+      const d = Math.abs(playerWorldX - pwx);
+      if (d < INTERACT_RADIUS && d < nearestDist) {
+        nearestDist = d;
+        nearestPlaqueIdx = i;
+      }
+    }
+
+    if (nearestPlaqueIdx >= 0 && state.phase === 'play' && !state.dialogue.active) {
+      const playerScreenX = (state.player.x + PLAYER_W / 2 - state.camera.x);
+      const playerScreenY = state.player.y;
+      const sx = canvasOffsetX + playerScreenX * scale;
+      const sy = canvasOffsetY + playerScreenY * scale;
+      promptEl.style.left = `${sx}px`;
+      promptEl.style.top = `${sy - 6}px`;
+      if (state.plaquesRead.has(nearestPlaqueIdx)) {
+        promptEl.innerHTML = '<span class="key">E</span>READ AGAIN';
+      } else {
+        promptEl.innerHTML = '<span class="key">E</span>READ PLAQUE';
+      }
+      promptEl.classList.add('visible');
+      state._nearestPlaque = nearestPlaqueIdx;
+    } else {
+      promptEl.classList.remove('visible');
+      state._nearestPlaque = -1;
+    }
+
+    // Floater
+    if (state.floater.active) {
+      const fx = state.floater.worldX - state.camera.x;
+      const fy = state.floater.worldY;
+      const sx = canvasOffsetX + fx * scale;
+      const sy = canvasOffsetY + fy * scale;
+      floaterEl.style.left = `${sx}px`;
+      floaterEl.style.top = `${sy}px`;
+    }
+
+    // HUD update
+    const zi = currentZoneIndex(state.player.x + PLAYER_W / 2);
+    if (zi !== state.currentZone) {
+      state.currentZone = zi;
+    }
+    const z = ZONES[zi];
+    hudYear.textContent = z.year;
+    hudSub.textContent = z.law;
+    progressDots.forEach((d, i) => {
+      d.classList.toggle('current', i === zi);
+    });
+  }
+
+  // ============================================================
+  // PHYSICS
+  // ============================================================
+  function updatePhysics(dt) {
+    const p = state.player;
+    const locked = state.dialogue.locking || state.phase === 'overlay' || state.phase === 'end';
+
+    // Horizontal input
+    let dx = 0;
+    if (!locked) {
+      if (state.input.left) dx -= 1;
+      if (state.input.right) dx += 1;
+    }
+    const sprinting = !locked && state.input.sprint && dx !== 0;
+    p.sprinting = sprinting;
+    const speed = sprinting ? WALK_SPEED * SPRINT_MULT : WALK_SPEED;
+    p.vx = dx * speed;
+    if (dx !== 0) p.facing = dx > 0 ? 1 : -1;
+
+    // Jump
+    if (!locked && state.input.jump && p.onGround) {
+      p.vy = JUMP_V;
+      p.onGround = false;
+    }
+
+    // Gravity
+    p.vy += GRAVITY * dt;
+    if (p.vy > 900) p.vy = 900;
+
+    // Integrate
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+
+    // World bounds
+    if (p.x < 0) p.x = 0;
+    if (p.x > WORLD_W - PLAYER_W) p.x = WORLD_W - PLAYER_W;
+
+    // Ground collision (flat)
+    if (p.y + PLAYER_H >= GROUND_Y) {
+      p.y = GROUND_Y - PLAYER_H;
+      p.vy = 0;
+      p.onGround = true;
+    } else {
+      p.onGround = false;
+    }
+
+    // Walk animation (faster cycle while sprinting)
+    if (p.onGround && Math.abs(p.vx) > 10) {
+      p.walkTimer += dt;
+      const frameDur = p.sprinting ? 0.065 : 0.11;
+      if (p.walkTimer > frameDur) {
+        p.walkTimer = 0;
+        p.walkFrame = (p.walkFrame + 1) % 4;
+      }
+    } else {
+      p.walkFrame = 0;
+      p.walkTimer = 0;
+    }
+  }
+
+  function updateCamera(dt) {
+    const p = state.player;
+    const target = p.x + PLAYER_W / 2 - LOGICAL_W / 2;
+    const clamped = Math.max(0, Math.min(WORLD_W - LOGICAL_W, target));
+    state.camera.target = clamped;
+    state.camera.x += (state.camera.target - state.camera.x) * CAMERA_LERP;
+    if (Math.abs(state.camera.target - state.camera.x) < 0.1) {
+      state.camera.x = state.camera.target;
+    }
+  }
+
+  function checkInteractions() {
+    if (state.phase !== 'play' || state.dialogue.active) {
+      state.interactEdge = false;
+      return;
+    }
+
+    // Interact with plaque
+    if (state.interactEdge && state._nearestPlaque >= 0) {
+      state._pendingPlaque = state._nearestPlaque;
+      openOverlay(state._nearestPlaque);
+      hideFloater();
+    }
+    state.interactEdge = false;
+
+    // End trigger — fires when the player's center reaches the beam/plant
+    const playerCenterX = state.player.x + PLAYER_W / 2;
+    if (playerCenterX >= END_TRIGGER_X) {
+      triggerEnd();
+    }
+  }
+
+  function triggerEnd() {
+    if (state.phase === 'end' || state._endStarted) return;
+    state._endStarted = true;
+    state.phase = 'play';
+    queueDialogue(END_DIALOGUE, true, () => {
+      state.phase = 'end';
+      endEl.classList.add('visible');
+      hudEl.style.opacity = '0';
+    });
+  }
+
+  walkbackBtn.addEventListener('click', () => {
+    endEl.classList.remove('visible');
+    hudEl.style.opacity = '1';
+    state._endStarted = false;
+    state.phase = 'play';
+    // Move player back a bit so they can re-explore
+    state.player.x = 80;
+    state.player.vx = 0;
+    state.player.vy = 0;
+    state.camera.x = 0;
+    state.camera.target = 0;
+  });
+
+  // ============================================================
+  // FLOATER TIMER
+  // ============================================================
+  function updateFloater(dt) {
+    if (!state.floater.active) return;
+    state.floater.timer += dt;
+    if (state.floater.timer > state.floater.ttl) {
+      hideFloater();
+    }
+  }
+
+  // ============================================================
+  // RENDER
+  // ============================================================
+  function render() {
+    const worldCenterX = state.camera.x + LOGICAL_W / 2;
+    const pal = blendedPalette(worldCenterX);
+
+    drawSky(pal, worldCenterX);
+
+    // Background layers — draw each zone's far then near
+    // FAR layer: parallax 0.4
+    // NEAR layer: parallax 0.75
+    // Ground layer: 1.0 (handled separately)
+
+    // Determine which zones might be visible in far layer
+    // With parallax, a zone's background shifts slowly. We just draw every zone — cheap.
+    for (let i = 0; i < ZONES.length; i++) {
+      const zStart = i * ZONE_W;
+      const cxFar = Math.floor(zStart - state.camera.x * 0.4);
+      // cull (zone draws in 900px band)
+      if (cxFar + ZONE_W < -100 || cxFar > LOGICAL_W + 100) continue;
+      drawFarLayer(i, cxFar, ZONE_W, ZONES[i].palette);
+    }
+
+    for (let i = 0; i < ZONES.length; i++) {
+      const zStart = i * ZONE_W;
+      const cxNear = Math.floor(zStart - state.camera.x * 0.75);
+      if (cxNear + ZONE_W < -100 || cxNear > LOGICAL_W + 100) continue;
+      drawNearLayer(i, cxNear, ZONE_W, ZONES[i].palette);
+    }
+
+    drawGround();
+    drawEndMarker();
+    drawPlaques();
+    drawPlayer();
+
+    // Subtle vignette
+    const vg = ctx.createRadialGradient(LOGICAL_W / 2, LOGICAL_H / 2, 200, LOGICAL_W / 2, LOGICAL_H / 2, 460);
+    vg.addColorStop(0, 'rgba(0,0,0,0)');
+    vg.addColorStop(1, 'rgba(0,0,0,0.45)');
+    ctx.fillStyle = vg;
+    ctx.fillRect(0, 0, LOGICAL_W, LOGICAL_H);
+  }
+
+  // ============================================================
+  // GAME LOOP
+  // ============================================================
+  let lastT = 0;
+  function loop(ts) {
+    if (!lastT) lastT = ts;
+    let dt = (ts - lastT) / 1000;
+    if (dt > 0.05) dt = 0.05;
+    lastT = ts;
+    state.t += dt;
+
+    if (state.phase === 'play' || state.phase === 'onboarding') {
+      updatePhysics(dt);
+      updateCamera(dt);
+    }
+    updateDialogue(dt);
+    updateFloater(dt);
+
+    if (state.phase === 'play') {
+      checkInteractions();
+    }
+
+    render();
+
+    // Player world position for UI
+    updateUI();
+
+    requestAnimationFrame(loop);
+  }
+
+  // ============================================================
+  // START
+  // ============================================================
+  function startGame() {
+    startEl.classList.add('fade-out');
+    setTimeout(() => { startEl.classList.add('hidden'); }, 520);
+    state.phase = 'onboarding';
+    queueDialogue(ONBOARDING, true, () => {
+      state.phase = 'play';
+    });
+  }
+  startBtn.addEventListener('click', startGame);
+  // Also allow Enter/Space on start
+  window.addEventListener('keydown', (e) => {
+    if (state.phase === 'start' && (e.key === 'Enter' || e.key === ' ')) {
+      startGame();
+    }
+  });
+
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
