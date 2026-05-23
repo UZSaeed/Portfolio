@@ -5,7 +5,7 @@ export interface SubItem {
   label: string;
   blurb: string;
   stack?: string[];
-  link?: { label: string; href: string };
+  link?: { label: string; href: string; external?: boolean };
 }
 
 export interface GraphNode {
@@ -108,6 +108,7 @@ export const subItems: Record<Exclude<Category, "center">, SubItem[]> = {
       blurb:
         "Open-source EMG exhibit: an ESP32 reads muscle electrical potentials and lets participants control a custom Flappy Bird clone via arm-squeeze signals. Full hardware schematics + source published.",
       stack: ["C++", "ESP32", "Python", "Arduino"],
+      link: { label: "Open demo", href: "/brainbird", external: false },
     },
     {
       id: "the-long-road",
@@ -115,6 +116,7 @@ export const subItems: Record<Exclude<Category, "center">, SubItem[]> = {
       blurb:
         "2D pixel game traveling through U.S. drug-legislation history. Players stop at landmark laws to learn about their passage and downstream inequities; ends with a direct link to real-world advocacy orgs.",
       stack: ["GDScript", "Godot"],
+      link: { label: "Play", href: "/thelongroad", external: false },
     },
   ],
   research: [

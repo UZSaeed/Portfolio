@@ -116,11 +116,12 @@ function SubList({ category }: { category: Category }) {
               {s.link && (
                 <a
                   href={s.link.href}
-                  target="_blank"
-                  rel="noreferrer"
+                  {...(s.link.external === false
+                    ? {}
+                    : { target: "_blank", rel: "noreferrer" })}
                   className="text-xs text-tn-cyan hover:underline"
                 >
-                  {s.link.label} ↗
+                  {s.link.label} {s.link.external === false ? "→" : "↗"}
                 </a>
               )}
             </div>
