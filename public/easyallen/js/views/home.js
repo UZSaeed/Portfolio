@@ -9,7 +9,7 @@ export async function render(main) {
       <section class="hero">
         <div class="hero-inner">
           <div>
-            <h1>Real neurons,<br>no code.</h1>
+            <h1>Explore real neuron recordings</h1>
             <p class="lede">Browse thousands of patch-clamp recordings from the Allen Cell Types Database, then plot and measure them right in your browser.</p>
             <div class="hero-actions">
               <a class="btn primary" href="#/lab">Start the firing patterns lab</a>
