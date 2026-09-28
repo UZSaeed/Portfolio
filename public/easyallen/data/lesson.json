@@ -1,0 +1,20 @@
+{
+ "pyramidal": {
+  "specimen_id": 525011903,
+  "sweep": 47,
+  "rate": 50000,
+  "t0": 0.9,
+  "n": 62500,
+  "v_scale": 0.03125,
+  "file": "data/lesson-pyramidal.bin"
+ },
+ "fast-spiking": {
+  "specimen_id": 469801138,
+  "sweep": 53,
+  "rate": 200000,
+  "t0": 0.9,
+  "n": 250000,
+  "v_scale": 0.03125,
+  "file": "data/lesson-fast-spiking.bin"
+ }
+}

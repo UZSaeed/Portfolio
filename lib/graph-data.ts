@@ -119,6 +119,14 @@ export const subItems: Record<Exclude<Category, "center">, SubItem[]> = {
       link: { label: "Play", href: "/thelongroad", external: false },
     },
     {
+      id: "easyallen",
+      label: "EasyAllen",
+      blurb:
+        "Neurophysiology teaching tool for the Allen Cell Types Database. Students browse thousands of real patch-clamp recordings, plot spike trains, and measure adaptation in the browser — no Python, no installs. Includes a guided firing-patterns lab.",
+      stack: ["JavaScript", "Canvas", "HDF5/NWB", "Web Workers"],
+      link: { label: "Open", href: "/easyallen", external: false },
+    },
+    {
       id: "translatemyrx",
       label: "TranslateMyRX",
       blurb:
@@ -382,6 +390,7 @@ export function buildGraph(): { nodes: GraphNode[]; links: GraphLink[] } {
     ["brainbird", "clinical"],
     ["the-long-road", "clinical"],
     ["translatemyrx", "clinical"],
+    ["easyallen", "research"],
     ["mcat-tutoring", "research"],
     ["web-dev", "projects"],
     ["pub-tavr-kccq", "projects"],
